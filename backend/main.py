@@ -32,3 +32,12 @@ app.add_middleware(
 @app.get("/", response_model=HelloResponse)
 def hello():
     return HelloResponse(**{"message": "Hello, world!"})
+
+# 画像一覧取得エンドポイント
+@app.get("/imgs")
+def get_all_imgs():
+    # DBできたらここで全件取得
+    # リストで返す？
+    return {
+        "imgs": []
+    }
