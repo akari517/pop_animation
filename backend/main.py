@@ -37,6 +37,25 @@ app.add_middleware(
 def hello():
     return HelloResponse(**{"message": "Hello, world!"})
 
+
+# 画像一覧取得エンドポイント
+@app.get("/images")
+def get_all_images():
+    # DBできたらここで全件取得
+    # リストで返す？
+    return {
+        "images": []
+    }
+    
+    
+# 画像取得エンドポイント
+@app.get("/images/{image_id}")
+def get_image_by_id(image_id: int):
+    # DBできたらここで取得
+    return {
+        "id": image_id
+    }
+
 # DB保存エンドポイント
 @app.post("/img/save")
 def save_img_url(req: ImageRecordRequest):
