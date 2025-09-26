@@ -9,6 +9,10 @@ from pydantic import BaseModel
 class HelloResponse(BaseModel):
     message: str
 
+# DB保存リクエスト
+class ImageRecordRequest(BaseModel):
+    s3_url: str
+    user_id: int
 
 # Initialize the FastAPI app
 app = FastAPI()
@@ -33,6 +37,7 @@ app.add_middleware(
 def hello():
     return HelloResponse(**{"message": "Hello, world!"})
 
+
 # 画像一覧取得エンドポイント
 @app.get("/images")
 def get_all_images():
@@ -50,3 +55,19 @@ def get_image_by_id(image_id: int):
     return {
         "id": image_id
     }
+
+# DB保存エンドポイント
+@app.post("/img/save")
+def save_img_url(req: ImageRecordRequest):
+    try:
+        # debug用
+        # DBできたらここでDBに保存
+        print(f"url: {req.s3_url}, user: {req.user_id}")
+        return {
+            "message": "image_url saved successfully"
+        }
+    except Exception as e:
+        return {
+            "message": f"failed to save image_url: {str(e)}"
+        }
+        
