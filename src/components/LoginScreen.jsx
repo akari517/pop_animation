@@ -8,7 +8,7 @@ function LoginScreen() {
   const handleLogin = () => {
     // 本来はここで認証処理を行う
     console.log("ログイン処理...");
-    navigate("/home/image1"); // 閲覧画面へ遷移
+    navigate("/home"); // 閲覧画面へ遷移
   };
 
   return (

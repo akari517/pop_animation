@@ -8,7 +8,7 @@ function RegisterScreen() {
   const handleRegister = () => {
     // 本来はここで登録処理を行う
     console.log("登録処理...");
-    navigate("/home/image1"); // 閲覧画面へ遷移
+    navigate("/home"); // 閲覧画面へ遷移
   };
 
   return (

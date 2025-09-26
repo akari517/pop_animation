@@ -1,7 +1,5 @@
 // src/components/ViewingScreen.jsx
-import React, { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom"; // hookをインポート
-import { useSwipeable } from "react-swipeable";
+import React, { useState } from "react";
 import "./ViewingScreen.css";
 
 // assetsフォルダから画像をインポート
@@ -9,68 +7,89 @@ import image1 from "../assets/image1.jpg";
 import image2 from "../assets/image2.jpg";
 import image3 from "../assets/image3.jpg";
 
-// ▼ 画像の情報をIDとセットで管理する
-const imageList = [
-  { id: "image1", src: image1 },
-  { id: "image2", src: image2 },
-  { id: "image3", src: image3 },
+// 初期データ
+const initialImageList = [
+  { id: "image1", src: image1, liked: false },
+  { id: "image2", src: image2, liked: false },
+  { id: "image3", src: image3, liked: false },
 ];
 
+// アイコンコンポーネント
+// src/components/ViewingScreen.jsx
+
+// ...
+
+// アイコンコンポーネント
+const HeartIcon = ({ liked, onClick }) => (
+  // ▼ fill を 'none' に、stroke を 'black' に変更
+  <svg
+    onClick={onClick}
+    width="28"
+    height="28"
+    viewBox="0 0 24 24"
+    fill={liked ? "red" : "none"}
+    stroke="black"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ cursor: "pointer" }}
+  >
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+  </svg>
+);
+
+const ShareIcon = ({ onClick }) => (
+  // ▼ stroke を 'black' に変更
+  <svg
+    onClick={onClick}
+    width="28"
+    height="28"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="black"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ cursor: "pointer" }}
+  >
+    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
+    <path d="M16 3h5v5"></path>
+    <path d="M10 14L21 3"></path>
+  </svg>
+);
+
 function ViewingScreen() {
-  const { imageId } = useParams(); // URLからimageIdを取得
-  const navigate = useNavigate(); // URL遷移のためのhook
+  const [imageList, setImageList] = useState(initialImageList);
 
-  // URLのimageIdから現在のインデックスを算出
-  const currentIndex = imageList.findIndex((img) => img.id === imageId);
-
-  const handlers = useSwipeable({
-    onSwipedUp: () => showNextImage(),
-    onSwipedDown: () => showPrevImage(),
-    preventDefaultTouchmoveEvent: true,
-    trackMouse: true,
-  });
-
-  const showNextImage = () => {
-    if (currentIndex < imageList.length - 1) {
-      const nextImageId = imageList[currentIndex + 1].id;
-      navigate(`/home/${nextImageId}`); // URLを次の画像のIDに変更
-    }
+  // いいねボタンの処理
+  const handleLike = (id) => {
+    setImageList((prevList) =>
+      prevList.map((image) =>
+        image.id === id ? { ...image, liked: !image.liked } : image
+      )
+    );
   };
 
-  const showPrevImage = () => {
-    if (currentIndex > 0) {
-      const prevImageId = imageList[currentIndex - 1].id;
-      navigate(`/home/${prevImageId}`); // URLを前の画像のIDに変更
-    }
+  // 共有ボタンの処理（今回はコンソールに出力するだけ）
+  const handleShare = (id) => {
+    console.log(`Sharing image: ${id}`);
+    alert(`画像を共有します: ${id}`);
   };
-
-  // URLに対応する画像が見つからない場合、最初の画像にリダイレクト
-  useEffect(() => {
-    if (currentIndex === -1) {
-      navigate("/home/image1");
-    }
-  }, [currentIndex, navigate]);
-
-  // 画像が見つからない場合は何も表示しない（リダイレクトが実行されるため）
-  if (currentIndex === -1) {
-    return null;
-  }
 
   return (
-    <div {...handlers} className="viewing-container">
-      <div
-        className="image-slider"
-        style={{ transform: `translateY(-${currentIndex * 100}%)` }}
-      >
-        {imageList.map((image) => (
-          <img
-            key={image.id}
-            src={image.src}
-            alt={image.id}
-            className="displayed-image"
-          />
-        ))}
-      </div>
+    <div className="feed-container">
+      {imageList.map((image) => (
+        <div key={image.id} className="image-card">
+          <img src={image.src} alt={image.id} className="feed-image" />
+          <div className="actions-container">
+            <ShareIcon onClick={() => handleShare(image.id)} />
+            <HeartIcon
+              liked={image.liked}
+              onClick={() => handleLike(image.id)}
+            />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

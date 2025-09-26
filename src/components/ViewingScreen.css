@@ -1,26 +1,38 @@
 /* src/components/ViewingScreen.css */
-
-/* 親コンテナ：はみ出した画像を見えなくする */
-.viewing-container {
+.feed-container {
   width: 100%;
-  height: calc(100vh - var(--nav-height));
-  overflow: hidden; /* ★重要：コンテナからはみ出した画像は非表示にする */
-  background-color: #000;
-  position: relative; /* 子要素の位置の基準とする */
+  max-width: 600px; /* PCでも見やすいように最大幅を設定 */
+  margin: 0 auto;
+  padding: 10px 0;
+  /* 下部ナビゲーションバーにコンテンツが隠れないように余白を追加 */
+  padding-bottom: calc(var(--nav-height) + 20px);
+  box-sizing: border-box;
 }
 
-/* スライダー：全画像を内包し、アニメーションで動く */
-.image-slider {
-  height: 100%;
-  width: 100%;
-  /* ★重要：transformの変化を0.4秒かけて滑らかに実行する */
-  transition: transform 0.4s ease-out;
+/* src/components/ViewingScreen.css */
+
+/* ... .feed-container と .feed-image は変更なし ... */
+
+.image-card {
+  /* position: relative; を削除 */
+  margin-bottom: 20px;
+  background-color: #ffffff; /* カード全体の背景を白に変更 */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* 画像：各画像がコンテナいっぱいに表示されるようにする */
-.displayed-image {
+.feed-image {
   width: 100%;
-  height: 100%;
-  object-fit: contain; /* アスペクト比を維持し、コンテナに収める */
-  display: block; /* 画像下の余分なスペースを削除 */
+  height: auto;
+  display: block;
+}
+
+.actions-container {
+  /* ▼▼▼ position: absolute; を削除し、以下のスタイルに変更 ▼▼▼ */
+  display: flex;
+  justify-content: flex-end; /* アイコンを右端に配置 */
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px; /* 余白を調整 */
 }

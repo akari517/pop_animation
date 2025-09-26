@@ -29,14 +29,10 @@ function App() {
           path="/"
           element={isAuthenticated ? <Layout /> : <Navigate to="/auth" />}
         >
-          {/* ▼ 変更点：/home のアクセスを最初の画像のURLにリダイレクト */}
-          <Route path="home" element={<Navigate to="/home/image1" />} />
-
-          {/* ▼ 変更点：:imageId というパラメータを受け取れるようにする */}
-          <Route path="home/:imageId" element={<ViewingScreen />} />
+          <Route path="home" element={<ViewingScreen />} />
 
           {/* ▼ 変更点：indexも最初の画像にリダイレクト */}
-          <Route index element={<Navigate to="/home/image1" />} />
+          <Route index element={<Navigate to="/home" />} />
 
           <Route path="home" element={<ViewingScreen />} />
           <Route path="post" element={<PostScreen />} />

@@ -1,35 +1,32 @@
 // src/components/Layout.jsx
+
 import React from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import "./Layout.css";
 
-// アイコンのインポート（今回は絵文字で代用）
-const HomeIcon = () => "🏠";
-const PostIcon = () => "➕";
-const FavIcon = () => "❤️";
-const MyPageIcon = () => "👤";
+// ▼ MUIからアイコンをインポート
+import HomeIcon from "@mui/icons-material/Home";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 function Layout() {
   return (
     <div className="layout-container">
       <main className="main-content">
-        <Outlet /> {/* ここに各ページのコンポーネントが表示される */}
+        <Outlet />
       </main>
       <nav className="bottom-nav">
         <NavLink to="/home" className="nav-item">
+          {/* ▼ MUIアイコンコンポーネントを使用 */}
           <HomeIcon />
           <span>ホーム</span>
         </NavLink>
         <NavLink to="/post" className="nav-item">
-          <PostIcon />
+          <AddCircleOutlineIcon />
           <span>投稿</span>
         </NavLink>
-        <NavLink to="/favorites" className="nav-item">
-          <FavIcon />
-          <span>お気に入り</span>
-        </NavLink>
         <NavLink to="/mypage" className="nav-item">
-          <MyPageIcon />
+          <AccountCircleIcon />
           <span>マイページ</span>
         </NavLink>
       </nav>
