@@ -1,7 +1,7 @@
 // src/components/PostScreen.jsx
 import React from "react";
 
-function PostScreen() {
+function SkechScreen() {
   return (
     <div className="screen-container">
       <h1>投稿画面</h1>
@@ -10,4 +10,4 @@ function PostScreen() {
   );
 }
 
-export default PostScreen;
+export default SkechScreen;
