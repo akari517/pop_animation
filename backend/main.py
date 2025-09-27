@@ -3,9 +3,13 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from dotenv import load_dotenv
 
+# 環境変数読み込み
+load_dotenv()
+DATABASE_URL = os.getenv("DB_EXTERNAL_URL")
 
-# Define the response model for the root endpoint
+# ルートエンドポイントのレスポンスモデル
 class HelloResponse(BaseModel):
     message: str
 
@@ -14,10 +18,8 @@ class ImageRecordRequest(BaseModel):
     s3_url: str
     user_id: int
 
-# Initialize the FastAPI app
 app = FastAPI()
 
-# Configure logging for the app
 logger = logging.getLogger("uvicorn")
 logger.level = logging.INFO
 
@@ -32,7 +34,17 @@ app.add_middleware(
 )
 
 
-# Define the root endpoint
+def get_db_connection():
+    """
+    新しい psycopg2 接続を返す。呼び出し側で close() してください。
+    簡易実装のため接続プールは使っていません。
+    """
+    db_url = DATABASE_URL
+    if not db_url:
+        raise RuntimeError("環境変数 DB_EXTERNAL_URL または DATABASE_URL が設定されていません。")
+    return psycopg2.connect(db_url)
+
+# ルートエンドポイント
 @app.get("/", response_model=HelloResponse)
 def hello():
     return HelloResponse(**{"message": "Hello, world!"})
@@ -41,8 +53,9 @@ def hello():
 # 画像一覧取得エンドポイント
 @app.get("/images")
 def get_all_images():
-    # DBできたらここで全件取得
-    # リストで返す？
+    # DBから全件取得
+    # conn = get_db_connection()
+    
     return {
         "images": []
     }
