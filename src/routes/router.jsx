@@ -1,4 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
+import { Navigate } from "react-router-dom";
+
 
 // 各ページコンポーネントのインポート
 import AuthScreen from "../screens/platForm/AuthScreen";
@@ -9,6 +11,11 @@ import PostScreen from "../screens/platForm/PostScreen";
 import FavoritesScreen from "../screens/platForm/FavoritesScreen";
 import MyPageScreen from "../screens/platForm/MyPageScreen";
 import Layout from "../components/Layout";
+
+//アニメーション関係
+import SketchScreen from "../screens/animation/SketchScreen";
+
+
 
 
 // 認証状態の管理（認証していない）
@@ -27,14 +34,15 @@ export const router = createBrowserRouter([
     Component: Layout,
     children: [
       { index: true, Component: ViewingScreen }, // "/" にアクセス → ViewingPage
-      { path: "home", Component: ViewingScreen },
-      { path:"post" ,Component:PostScreen},
-      { path: "post",
-        Component: () => (
-          <RequireAuth isAuthenticated={isAuthenticated}>
-            <PostScreen />
-          </RequireAuth>
-      ),},
+      { path: "home", Component: ViewingScreen},
+      //{path:"post" ,Component:PostScreen},
+      { path:"sketch" ,Component:SketchScreen},
+      // { path: "post",
+      //   Component: () => (
+      //     <RequireAuth isAuthenticated={isAuthenticated}>
+      //       <PostScreen />
+      //     </RequireAuth>
+      // ),},
 
       { path: "favorites", Component: FavoritesScreen },
       { path: "mypage", Component: MyPageScreen},

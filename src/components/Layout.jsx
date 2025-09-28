@@ -21,7 +21,7 @@ function Layout() {
           <HomeIcon />
           <span>ホーム</span>
         </NavLink>
-        <NavLink to="/post" className="nav-item">
+        <NavLink to="/sketch" className="nav-item">
           <AddCircleOutlineIcon />
           <span>投稿</span>
         </NavLink>
