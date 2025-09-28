@@ -1,13 +1,12 @@
-// src/components/PostScreen.jsx
 import React from "react";
 
-function PostScreen() {
+function SkechScreen() {
   return (
     <div className="screen-container">
-      <h1>投稿画面</h1>
+      <h1>お気に入り画面</h1>
       <p>この画面は現在準備中です。</p>
     </div>
   );
 }
 
-export default PostScreen;
+export default SkechScreen;
