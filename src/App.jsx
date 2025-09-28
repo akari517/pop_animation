@@ -11,37 +11,31 @@ import PostScreen from "./components/Animation/PostScreen";
 import FavoritesScreen from "./components/FavoritesScreen";
 import MyPageScreen from "./components/MyPageScreen";
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-  // ここでログイン状態を管理することを想定（今回は常にログイン済みとする）
-  const isAuthenticated = true;
-
   return (
     <BrowserRouter>
       <Routes>
-        {/* 認証関連のルート */}
-        <Route path="/auth" element={<AuthScreen />} />
-        <Route path="/login" element={<LoginScreen />} />
-        <Route path="/register" onRegister={() => <Navigate to="/home" />} />
-
-        {/* メイン機能のルート（Layoutコンポーネントでラップ） */}
-        <Route
-          path="/"
-          element={isAuthenticated ? <Layout /> : <Navigate to="/auth" />}
-        >
-          <Route path="home" element={<ViewingScreen />} />
-
-          {/* ▼ 変更点：indexも最初の画像にリダイレクト */}
-          <Route index element={<Navigate to="/home" />} />
-
+        {/* Layoutコンポーネントを使い、共通のタブバーを表示するルート */}
+        <Route path="/" element={<Layout />}>
+          <Route index element={<ViewingScreen />} />
           <Route path="home" element={<ViewingScreen />} />
           <Route path="post" element={<PostScreen />} />
-          <Route path="favorites" element={<FavoritesScreen />} />
-          <Route path="mypage" element={<MyPageScreen />} />
+          {/* MyPageは後で保護対象にします */}
+          <Route
+            path="mypage"
+            element={
+              <ProtectedRoute>
+                <MyPageScreen />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
-        {/* 未定義のルートはホームへリダイレクト */}
-        <Route path="*" element={<Navigate to="/" />} />
+        {/* タブバーなしの独立した画面 */}
+        <Route path="/login" element={<LoginScreen />} />
+        <Route path="/register" element={<RegisterScreen />} />
       </Routes>
     </BrowserRouter>
   );

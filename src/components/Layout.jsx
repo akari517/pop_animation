@@ -1,15 +1,17 @@
 // src/components/Layout.jsx
-
 import React from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import "./Layout.css";
+import { useAuth } from "../contexts/AuthContext"; // ← インポート
 
-// ▼ MUIからアイコンをインポート
 import HomeIcon from "@mui/icons-material/Home";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LoginIcon from "@mui/icons-material/Login"; // ログインアイコンを追加
 
 function Layout() {
+  const { currentUser } = useAuth(); // ← ログイン状態を取得
+
   return (
     <div className="layout-container">
       <main className="main-content">
@@ -17,7 +19,6 @@ function Layout() {
       </main>
       <nav className="bottom-nav">
         <NavLink to="/home" className="nav-item">
-          {/* ▼ MUIアイコンコンポーネントを使用 */}
           <HomeIcon />
           <span>ホーム</span>
         </NavLink>
@@ -25,10 +26,19 @@ function Layout() {
           <AddCircleOutlineIcon />
           <span>投稿</span>
         </NavLink>
-        <NavLink to="/mypage" className="nav-item">
-          <AccountCircleIcon />
-          <span>マイページ</span>
-        </NavLink>
+
+        {/* ▼ ログイン状態に応じて表示を切り替え */}
+        {currentUser ? (
+          <NavLink to="/mypage" className="nav-item">
+            <AccountCircleIcon />
+            <span>マイページ</span>
+          </NavLink>
+        ) : (
+          <NavLink to="/login" className="nav-item">
+            <LoginIcon />
+            <span>ログイン</span>
+          </NavLink>
+        )}
       </nav>
     </div>
   );
