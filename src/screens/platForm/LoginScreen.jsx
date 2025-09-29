@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom"; // react-router-domからLinkをインポート
-import { supabase } from "../supabaseClient";
+import { supabase } from "../../supabaseClient";
 
 function LoginScreen() {
   const [email, setEmail] = useState("");

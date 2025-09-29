@@ -1,7 +1,7 @@
 // src/components/RegisterScreen.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../../supabaseClient";
 
 function RegisterScreen() {
   const [email, setEmail] = useState("");

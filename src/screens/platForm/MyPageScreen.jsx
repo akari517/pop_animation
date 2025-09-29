@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
-import { useAuth } from "../contexts/AuthContext";
+import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../contexts/AuthContext";
 
 function MyPageScreen() {
   const { currentUser } = useAuth(); // session.userでも可
