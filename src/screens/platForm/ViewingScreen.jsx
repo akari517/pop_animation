@@ -1,6 +1,5 @@
-// src/screens/platorm/ViewingScreen.jsx
 import React, { useState } from "react";
-import "./ViewingScreen.css"; 
+import "./ViewingScreen.css";
 
 // assetsフォルダから画像をインポート
 import image1 from "../../assets/image1.jpg";
@@ -13,11 +12,6 @@ const initialImageList = [
   { id: "image2", src: image2, liked: false },
   { id: "image3", src: image3, liked: false },
 ];
-
-// アイコンコンポーネント
-// src/components/ViewingScreen.jsx
-
-// ...
 
 // アイコンコンポーネント
 const HeartIcon = ({ liked, onClick }) => (
