@@ -33,7 +33,7 @@ function TestPostScreen() {
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
-
+      //↓データベースと連携する時に使います
       // 2. アップロードした画像の公開URLを取得
       //   const {
       //     data: { publicUrl },

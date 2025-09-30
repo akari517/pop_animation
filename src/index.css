@@ -55,3 +55,18 @@ h1 {
 .button:hover {
   background-color: #0056b3;
 }
+
+.liked-images-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
+}
+.liked-image-thumbnail {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 4px;
+}

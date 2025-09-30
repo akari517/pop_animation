@@ -1,18 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./ViewingScreen.css";
+import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../contexts/AuthContext";
 
 // assetsフォルダから画像をインポート
 import image1 from "../../assets/image1.jpg";
 import image2 from "../..//assets/image2.jpg";
 import image3 from "../../assets/image3.jpg";
 
-// 初期データ
-const initialImageList = [
-  { id: "image1", src: image1, liked: false },
-  { id: "image2", src: image2, liked: false },
-  { id: "image3", src: image3, liked: false },
+// 初期データ（アプリ内で画像情報を一元管理できるようにエクスポートしておく）
+export const localImageList = [
+  { id: "image1", src: image1 },
+  { id: "image2", src: image2 },
+  { id: "image3", src: image3 },
 ];
-
 // アイコンコンポーネント
 const HeartIcon = ({ liked, onClick }) => (
   // ▼ fill を 'none' に、stroke を 'black' に変更
@@ -53,15 +54,70 @@ const ShareIcon = ({ onClick }) => (
 );
 
 function ViewingScreen() {
-  const [imageList, setImageList] = useState(initialImageList);
+  const [imageList, setImageList] = useState([]);
+  const { currentUser } = useAuth(); // ログイン中のユーザー情報を取得
+
+  // 最初に画像といいね情報を読み込む
+  useEffect(() => {
+    const fetchImagesAndLikes = async () => {
+      // ログインしている場合のみ、いいね情報を取得
+      if (currentUser) {
+        const { data: userLikes, error } = await supabase
+          .from("likes")
+          .select("image_id")
+          .eq("user_id", currentUser.id);
+
+        if (error) {
+          console.error("いいね情報の取得エラー:", error);
+          return;
+        }
+
+        const likedImageIds = userLikes.map((like) => like.image_id);
+        const mergedImageList = localImageList.map((image) => ({
+          ...image,
+          liked: likedImageIds.includes(image.id),
+        }));
+        setImageList(mergedImageList);
+      } else {
+        // ログインしていない場合は、いいねなしの状態で表示
+        const unlikedImageList = localImageList.map((image) => ({
+          ...image,
+          liked: false,
+        }));
+        setImageList(unlikedImageList);
+      }
+    };
+
+    fetchImagesAndLikes();
+  }, [currentUser]); // currentUserが変わるたびに再実行
 
   // いいねボタンの処理
-  const handleLike = (id) => {
-    setImageList((prevList) =>
-      prevList.map((image) =>
-        image.id === id ? { ...image, liked: !image.liked } : image
-      )
+  const handleLike = async (id, currentLikedStatus) => {
+    if (!currentUser) {
+      alert("いいねをするにはログインが必要です。");
+      return;
+    }
+
+    // 先にUIを更新して即時反映させる
+    const updatedList = imageList.map((image) =>
+      image.id === id ? { ...image, liked: !image.liked } : image
     );
+    setImageList(updatedList);
+
+    if (currentLikedStatus) {
+      // いいね解除：データベースから削除
+      const { error } = await supabase
+        .from("likes")
+        .delete()
+        .match({ user_id: currentUser.id, image_id: id });
+      if (error) console.error("いいね解除エラー:", error);
+    } else {
+      // いいね追加：データベースに挿入
+      const { error } = await supabase
+        .from("likes")
+        .insert([{ user_id: currentUser.id, image_id: id }]);
+      if (error) console.error("いいね追加エラー:", error);
+    }
   };
 
   // 共有ボタンの処理（今回はコンソールに出力するだけ）
@@ -79,7 +135,7 @@ function ViewingScreen() {
             <ShareIcon onClick={() => handleShare(image.id)} />
             <HeartIcon
               liked={image.liked}
-              onClick={() => handleLike(image.id)}
+              onClick={() => handleLike(image.id, image.liked)}
             />
           </div>
         </div>
