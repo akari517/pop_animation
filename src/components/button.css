@@ -1,0 +1,37 @@
+/* 共通スタイル */
+.custom-button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+/* 通常ボタン用 */
+.custom-button.default {
+  border: 1px solid #ccc;
+  background-color: #f0f0f0;
+}
+
+.custom-button.default:hover {
+  background-color: #e0e0e0;
+}
+
+.custom-button.default.active {
+  border-color: #888;
+  background-color: #d0d0d0;
+}
+
+/* 色ボタン用 */
+.custom-button.color {
+  border: 1px solid #999;
+  background-color: #fff;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+}
+
+.custom-button.color.active {
+  border-width: 2px;
+  border-color: #000;
+}
