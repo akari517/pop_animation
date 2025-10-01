@@ -1,15 +1,22 @@
 import React from "react";
-import "./button.css";
+import { Button as MuiButton } from "@mui/material";
 
-const Button = ({ children, onClick, isActiv, style, type = "default" }) => {
+const Button = ({ children, onClick, isActiv, type = "default", style }) => {
   return (
-    <button
-      className={`custom-button ${type} ${isActiv ? "active" : ""}`} // ← isActivの判定を確実に
+    <MuiButton
       onClick={onClick}
       style={style}
+      // variantとcolorで切り替え
+      variant={isActiv ? "contained" : "outlined"}
+      color={type === "danger" ? "error" : "primary"} 
+      sx={{
+        borderRadius: "12px",
+        textTransform: "none", // 大文字変換を無効化
+        fontWeight: isActiv ? "bold" : "normal",
+      }}
     >
       {children}
-    </button>
+    </MuiButton>
   );
 };
 
