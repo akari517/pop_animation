@@ -15,7 +15,7 @@ class HelloResponse(BaseModel):
 
 # DB保存リクエスト
 # TODO: schema決まったら修正
-class ImageRecordRequest(BaseModel):
+class WorkRecordRequest(BaseModel):
     s3_url: str
     user_id: int
 
@@ -41,22 +41,22 @@ def get_db_connection():
     .env の小文字キー (user,password,host,port,dbname) を想定。
     Supabase pooler を使う場合は sslmode='require' を付与します。
     """
-    user = os.getenv("DB_USER") or os.getenv("user")
-    password = os.getenv("DB_PASSWORD") or os.getenv("password")
-    host = os.getenv("DB_HOST") or os.getenv("host")
-    port = os.getenv("DB_PORT") or os.getenv("port")
-    dbname = os.getenv("DB_NAME") or os.getenv("dbname")
+    USER = os.getenv("user")
+    PASSWORD = os.getenv("password")
+    HOST = os.getenv("host")
+    PORT = os.getenv("port", "5432")
+    DBNAME = os.getenv("dbname")
 
-    if not all([user, password, host, port, dbname]):
+    if not all([USER, PASSWORD, HOST, PORT, DBNAME]):
         raise RuntimeError("環境変数が不足しています。user/password/host/port/dbname を設定してください。")
 
     try:
         return psycopg2.connect(
-            user=user,
-            password=password,
-            host=host,
-            port=port,
-            dbname=dbname,
+            user=USER,
+            password=PASSWORD,
+            host=HOST,
+            port=PORT,
+            dbname=DBNAME,
             sslmode="require",
             connect_timeout=10
         )
@@ -65,7 +65,7 @@ def get_db_connection():
 
 
 
-def get_all_images_from_db():
+def get_all_works_from_db():
     """
     DBから全件取得する関数。
     """
@@ -80,8 +80,8 @@ def get_all_images_from_db():
             cur.execute(query)
             rows = cur.fetchall()
             # TODO: schema決まったら修正
-            images_list = [{"name": name, "category": category, "image_name": image_name} for name, category, image_name in rows]
-            result = {"images": images_list}
+            works_list = [{"name": name, "category": category, "work_name": work_name} for name, category, work_name in rows]
+            result = {"works": works_list}
             return result
     finally:
         conn.close()
@@ -97,31 +97,31 @@ def hello():
 
 
 # 画像一覧取得エンドポイント
-@app.get("/images")
-def get_all_images():
-    return get_all_images_from_db()
+@app.get("/works")
+def get_all_works():
+    return get_all_works_from_db()
 
 
 # 画像取得エンドポイント
-@app.get("/images/{image_id}")
-def get_image_by_id(image_id: int):
+@app.get("/works/{work_id}")
+def get_work_by_id(work_id: int):
     # DBできたらここで取得
     return {
-        "id": image_id
+        "id": work_id
     }
 
 # DB保存エンドポイント
 @app.post("/img/save")
-def save_img_url(req: ImageRecordRequest):
+def save_img_url(req: WorkRecordRequest):
     try:
         # debug用
         # DBできたらここでDBに保存
         print(f"url: {req.s3_url}, user: {req.user_id}")
         return {
-            "message": "image_url saved successfully"
+            "message": "work_url saved successfully"
         }
     except Exception as e:
         return {
-            "message": f"failed to save image_url: {str(e)}"
+            "message": f"failed to save work_url: {str(e)}"
         }
 
