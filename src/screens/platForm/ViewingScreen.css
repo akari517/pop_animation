@@ -11,8 +11,6 @@
 
 /* src/components/ViewingScreen.css */
 
-/* ... .feed-container と .feed-image は変更なし ... */
-
 .image-card {
   /* position: relative; を削除 */
   margin-bottom: 20px;
@@ -31,7 +29,7 @@
 .actions-container {
   /* ▼▼▼ position: absolute; を削除し、以下のスタイルに変更 ▼▼▼ */
   display: flex;
-  justify-content: flex-end; /* アイコンを右端に配置 */
+  justify-content: space-between;
   align-items: center;
   gap: 12px;
   padding: 8px 12px; /* 余白を調整 */
