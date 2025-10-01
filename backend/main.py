@@ -8,8 +8,6 @@ import psycopg2
 
 # 環境変数読み込み
 load_dotenv()
-# TODO: RenderにデプロイするときはおそらくDB_INTERNAL_URLに変えたほうがいい？
-DATABASE_URL = os.getenv("DB_EXTERNAL_URL") or os.getenv("DATABASE_URL")
 
 # ルートエンドポイントのレスポンスモデル
 class HelloResponse(BaseModel):
@@ -40,12 +38,30 @@ app.add_middleware(
 def get_db_connection():
     """
     新しい psycopg2 接続を返す。呼び出し側で必ず close() 必要。
-    withで呼び出すなら自動で閉じるのでcloseは不要
+    .env の小文字キー (user,password,host,port,dbname) を想定。
+    Supabase pooler を使う場合は sslmode='require' を付与します。
     """
-    db_url = DATABASE_URL
-    if not db_url:
-        raise RuntimeError("環境変数 DB_EXTERNAL_URL または DATABASE_URL が設定されていません。")
-    return psycopg2.connect(db_url)
+    user = os.getenv("DB_USER") or os.getenv("user")
+    password = os.getenv("DB_PASSWORD") or os.getenv("password")
+    host = os.getenv("DB_HOST") or os.getenv("host")
+    port = os.getenv("DB_PORT") or os.getenv("port")
+    dbname = os.getenv("DB_NAME") or os.getenv("dbname")
+
+    if not all([user, password, host, port, dbname]):
+        raise RuntimeError("環境変数が不足しています。user/password/host/port/dbname を設定してください。")
+
+    try:
+        return psycopg2.connect(
+            user=user,
+            password=password,
+            host=host,
+            port=port,
+            dbname=dbname,
+            sslmode="require",
+            connect_timeout=10
+        )
+    except Exception as e:
+        raise RuntimeError(f"データベースに接続できませんでした: {e}")
 
 
 
@@ -108,4 +124,4 @@ def save_img_url(req: ImageRecordRequest):
         return {
             "message": f"failed to save image_url: {str(e)}"
         }
-        
+
