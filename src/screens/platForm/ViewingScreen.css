@@ -34,3 +34,12 @@
   gap: 12px;
   padding: 8px 12px; /* 余白を調整 */
 }
+
+.work-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+.icon-buttons-preview {
+  display: flex;
+  gap: 8px;
+}

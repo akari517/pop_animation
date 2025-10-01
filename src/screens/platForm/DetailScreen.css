@@ -1,0 +1,51 @@
+/* src/components/DetailScreen.css */
+.detail-container {
+  padding: 20px;
+  background-color: #f0f0f7;
+  min-height: 100vh;
+}
+.back-button {
+  background: none;
+  border: 1px solid #ccc;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+.detail-card {
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+.detail-image {
+  width: 100%;
+  height: auto;
+}
+.detail-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+}
+.detail-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+.detail-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.edit-button {
+  background-color: #007aff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
