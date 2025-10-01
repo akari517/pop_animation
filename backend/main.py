@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import psycopg2
+from psycopg2.extras import RealDictCursor
 
 # 環境変数読み込み
 load_dotenv()
@@ -35,6 +36,7 @@ app.add_middleware(
 )
 
 
+TABLE_NAME = "works"
 def get_db_connection():
     """
     新しい psycopg2 接続を返す。呼び出し側で必ず close() 必要。
@@ -46,6 +48,7 @@ def get_db_connection():
     HOST = os.getenv("host")
     PORT = os.getenv("port", "5432")
     DBNAME = os.getenv("dbname")
+    
 
     if not all([USER, PASSWORD, HOST, PORT, DBNAME]):
         raise RuntimeError("環境変数が不足しています。user/password/host/port/dbname を設定してください。")
@@ -73,7 +76,7 @@ def get_all_works_from_db():
     
     # TODO: クエリは修正
     query = """
-    SELECT * FROM works;
+    SELECT * FROM {TABLE_NAME};
     """
     try:
         with conn.cursor() as cur:
@@ -83,7 +86,29 @@ def get_all_works_from_db():
     finally:
         conn.close()
     
+
+def insert_work_to_db(table_name, work_id, title, url, user_id, created_at=None):
+    """
+    DBに新規workを挿入する関数。
+    """
+    conn = get_db_connection()
     
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        if created_at is None:
+            cur.execute(
+                f"INSERT INTO {table_name} (work_id, title, url, user_id, created_at) "
+                "VALUES (%s, %s, %s, %s, NOW()) RETURNING *;",
+                (work_id, title, url, user_id)
+            )
+        else:
+            cur.execute(
+                f"INSERT INTO {table_name} (work_id, title, url, user_id, created_at) "
+                "VALUES (%s, %s, %s, %s, %s) RETURNING *;",
+                (work_id, title, url, user_id, created_at)
+            )
+        row = cur.fetchone()
+        conn.commit()
+        return row
 
 
 
@@ -113,7 +138,7 @@ def save_img_url(req: WorkRecordRequest):
     try:
         # debug用
         # DBできたらここでDBに保存
-        print(f"url: {req.s3_url}, user: {req.user_id}")
+        # print(f"url: {req.s3_url}, user: {req.user_id}")
         return {
             "message": "work_url saved successfully"
         }
