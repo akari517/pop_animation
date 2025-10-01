@@ -6,7 +6,7 @@ import image2 from "../../assets/image4.jpg";
 
 const SketchScreen = () => {
   const isDrawing = useRef(false);
-  const [tool, setTool] = useState("pen"); // "pen" | "circle" | "eraser"
+  const [tool, setTool] = useState("pen"); // "pen" | "eraser"
   const [color, setColor] = useState("#ffadad");
   const [shapes, setShapes] = useState([]);
   const history = useRef([[]]);
@@ -15,7 +15,7 @@ const SketchScreen = () => {
   // レスポンシブ対応
   const [stageSize, setStageSize] = useState({
     width: window.innerWidth,
-    height: window.innerHeight * 0.8,
+    height: window.innerHeight - 50 - 50 - 16, // 上ボタン50px, 下ボタン50px, 余白16px
   });
 
   // リサイズ対応
@@ -23,7 +23,7 @@ const SketchScreen = () => {
     const handleResize = () => {
       setStageSize({
         width: window.innerWidth,
-        height: window.innerHeight * 0.8,
+        height: window.innerHeight * 0.8 - 50 - 50 - 16,
       });
     };
     window.addEventListener("resize", handleResize);
@@ -35,9 +35,7 @@ const SketchScreen = () => {
     isDrawing.current = true;
     if (tool === "pen" || tool === "eraser") {
       setShapes((prev) => [...prev, { points: [pos.x, pos.y], color, tool }]);
-    } else if (tool === "circle") {
-      setShapes((prev) => [...prev, { x: pos.x, y: pos.y, radius: 0, color, tool }]);
-    }
+    } 
   };
 
   const drawMove = (pos) => {
@@ -50,12 +48,7 @@ const SketchScreen = () => {
           ...prev.slice(0, lastIdx),
           { ...lastShape, points: [...lastShape.points, pos.x, pos.y] },
         ];
-      } else if (lastShape.tool === "circle") {
-        return [
-          ...prev.slice(0, lastIdx),
-          { ...lastShape, radius: Math.hypot(pos.x - lastShape.x, pos.y - lastShape.y) },
-        ];
-      }
+      } 
       return prev;
     });
   };
@@ -123,24 +116,19 @@ const SketchScreen = () => {
     <div style={{ width: "100%" }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
         <div style={{ display: "flex", gap: 4 }}>
-          <Button onClick={() => setTool("pen")} isActiv={tool === "pen"}>pen</Button>
-          <Button onClick={() => setTool("eraser")} isActiv={tool === "eraser"}>eraser</Button>
-          <Button onClick={() => setTool("circle")} isActiv={tool === "circle"}>circle</Button>
-        </div>    
-        <div style={{ display: "flex", gap: 4 }}>
+          <Button type="default" onClick={() => setTool("pen")}isActiv={tool === "pen"}>pen</Button>
+          <Button type="default" onClick={() => setTool("eraser")}isActiv={tool === "eraser"}>eraser</Button>
+        </div>   
+        {/* <div style={{ height:  5}}/>  */}
+        <div style={{ display: "flex", gap: 4 ,padding:" 0 8px"}}>
           <Button onClick={handleUndo}>undo</Button>
           <Button onClick={handleRedo}>redo</Button>
           <Button onClick={handleClear}>all clear</Button>
         </div>
-
-        <div style={{ display: "flex", gap: 10}}>
-          <Button onClick={() => setColor("#ffadad")} isActiv={color === "#ffadad"} style={{ backgroundColor: "#ffadad" }}>red</Button>
-          <Button onClick={() => setColor("#C8E6C9")} isActiv={color === "#C8E6C9"} style={{ backgroundColor: "#C8E6C9" }}>green</Button>
-          <Button onClick={() => setColor("#84c1ff")} isActiv={color === "#84c1ff"} style={{ backgroundColor: "#84c1ff" }}>blue</Button>
-        </div>
       </div>
 
-      <div style={{ width: "100%", height: stageSize.height, border: "1px solid #dee2e6" }}>
+
+      <div style={{ width: "100%", height: stageSize.height, border: "1px solid #dee2e6"}}>
         <Stage
           width={stageSize.width}
           height={stageSize.height}
@@ -160,20 +148,27 @@ const SketchScreen = () => {
                 <Line
                   key={i}
                   points={shape.points}
-                  stroke={shape.tool === "eraser" ? "#ffffff" : shape.color}
+                  stroke={shape.color} 
                   strokeWidth={shape.tool === "eraser" ? 20 : 8}
                   tension={0.5}
                   lineCap="round"
                   lineJoin="round"
                   globalCompositeOperation={shape.tool === "eraser" ? "destination-out" : "source-over"}
                 />
-              ) : (
-                <Circle key={i} x={shape.x} y={shape.y} radius={shape.radius} stroke={shape.color} strokeWidth={4} />
-              )
+              ): null
             )}
           </Layer>
         </Stage>
       </div>
+
+      {/*画像と下のボタンとの隙間 */}
+      <div style={{ height: 5 }} />
+
+        <div style={{ display: "flex", gap: 4}}>
+          <Button type="color" style={{ backgroundColor: "#ffadad" }} onClick={() => setColor("#ffadad")}isActiv={color === "#ffadad"} />
+          <Button type="color" style={{ backgroundColor: "#C8E6C9" }} onClick={() => setColor("#C8E6C9")}isActiv={color === "#C8E6C9"} />
+          <Button type="color" style={{ backgroundColor: "#84c1ff" }} onClick={() => setColor("#84c1ff")} isActiv={color=="#84c1ff"}/>
+        </div>
     </div>
   );
 };
@@ -185,13 +180,18 @@ const URLImage = ({ src, stageWidth, stageHeight, ...rest }) => {
   const ratio = image.width / image.height;
   let width = stageWidth;
   let height = stageHeight;
+
   if (stageWidth / stageHeight > ratio) {
     width = stageHeight * ratio;
   } else {
     height = stageWidth / ratio;
   }
 
-  return <Image image={image} width={width} height={height} {...rest} />;
+  // ステージ中央に配置
+  const x = (stageWidth - width) / 2;
+  const y = (stageHeight - height) / 2;
+
+  return <Image image={image} width={width} height={height} x={x} y={y} {...rest} />;
 };
 
 export default SketchScreen;

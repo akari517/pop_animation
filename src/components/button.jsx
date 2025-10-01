@@ -4,13 +4,13 @@ import "./button.css";
 const Button = ({ children, onClick, isActiv, style, type = "default" }) => {
   return (
     <button
-    className={'custom-button ${type}${isActiv ? "active" : ""}'}
-    
-    onClick={onClick}
-      tyle={style}
+      className={`custom-button ${type} ${isActiv ? "active" : ""}`} // ← isActivの判定を確実に
+      onClick={onClick}
+      style={style}
     >
-    {children}
-    </button> 
+      {children}
+    </button>
   );
 };
+
 export default Button;
