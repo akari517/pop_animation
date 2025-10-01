@@ -73,16 +73,13 @@ def get_all_works_from_db():
     
     # TODO: クエリは修正
     query = """
-    SELECT * FROM XXX;
+    SELECT * FROM works;
     """
     try:
         with conn.cursor() as cur:
             cur.execute(query)
             rows = cur.fetchall()
-            # TODO: schema決まったら修正
-            works_list = [{"name": name, "category": category, "work_name": work_name} for name, category, work_name in rows]
-            result = {"works": works_list}
-            return result
+            return rows
     finally:
         conn.close()
     
