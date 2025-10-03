@@ -1,12 +1,11 @@
-画像を読み込むコンポーネント
 import React from "react";
 import { Image } from "react-konva";
 import useImage from "use-image";
 
-
-
 // 画像読み込み
 const URLImage = ({ src, stageWidth, stageHeight, ...rest }) => {
+console.log("URLImage src:", src);
+
   const [image] = useImage(src);
   if (!image) return null;
 
@@ -27,3 +26,4 @@ const URLImage = ({ src, stageWidth, stageHeight, ...rest }) => {
 };
 
 export default URLImage;
+

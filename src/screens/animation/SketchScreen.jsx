@@ -12,6 +12,8 @@ import {
 import image2 from "../../assets/image4.jpg";
 
 import { getLineProps } from "./PenTools";
+import URLImage from "../../components/URLImage.jsx";
+import { useStageSize } from "../../components/useStageSize.jsx";
 
 const SketchScreen = () => {
   const isDrawing = useRef(false);
@@ -21,22 +23,8 @@ const SketchScreen = () => {
   const history = useRef([[]]);
   const historyStep = useRef(0);
 
-  const [stageSize, setStageSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight - 50 - 50 - 16,
-  });
 
-  // リサイズ対応
-  useEffect(() => {
-    const handleResize = () => {
-      setStageSize({
-        width: window.innerWidth,
-        height: window.innerHeight * 0.8 - 50 - 50 - 16,
-      });
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const stageSize = useStageSize();
 
   // 描画開始
   const startDrawing = (pos) => {
@@ -280,27 +268,6 @@ const SketchScreen = () => {
       </ToggleButtonGroup>
     </Box>
   );
-};
-
-// 画像読み込み
-const URLImage = ({ src, stageWidth, stageHeight, ...rest }) => {
-  const [image] = useImage(src);
-  if (!image) return null;
-
-  const ratio = image.width / image.height;
-  let width = stageWidth;
-  let height = stageHeight;
-
-  if (stageWidth / stageHeight > ratio) {
-    width = stageHeight * ratio;
-  } else {
-    height = stageWidth / ratio;
-  }
-
-  const x = (stageWidth - width) / 2;
-  const y = (stageHeight - height) / 2;
-
-  return <Image image={image} width={width} height={height} x={x} y={y} {...rest} />;
 };
 
 export default SketchScreen;
