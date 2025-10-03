@@ -1,0 +1,349 @@
+/* ===============================
+   全体レイアウトとリセット
+   =============================== */
+
+/* 最初にデフォルトの余白をリセット */
+/* 最初にデフォルトの余白をリセット */
+
+body,
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: sans-serif;
+  background-color: #333;
+}
+
+/* アプリ全体のコンテナ */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: white;
+  overflow: hidden;
+}
+
+/* ===============================
+   上部ナビゲーション
+   =============================== */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: white;
+  flex-shrink: 0;
+}
+
+.select-button {
+  border: 1px solid #007aff;
+  background-color: white;
+  color: #007aff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.done-button {
+  border: none;
+  background-color: #007aff;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ===============================
+   画像表示エリア
+   =============================== */
+.image-viewport {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f0f0;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.placeholder-text {
+  color: #888;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* 画像とオーバーレイを重ねるラッパー */
+.image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: filter 0.3s ease-in-out;
+}
+
+/* ===============================
+   エフェクト（本番表示用）
+   =============================== */
+
+/* --- 光エフェクト --- */
+.light-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 200, 0.6), transparent 70%);
+  animation: light-move 5s infinite alternate ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes light-move {
+  0% {
+    background-position: 30% 30%;
+  }
+
+  100% {
+    background-position: 70% 70%;
+  }
+}
+
+/* --- 雨エフェクト --- */
+.rain-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: repeating-linear-gradient(to bottom right,
+      rgba(255, 255, 255, 0.2) 0px,
+      rgba(255, 255, 255, 0.2) 2px,
+      transparent 2px,
+      transparent 20px);
+  background-size: 20px 40px;
+  animation: rain-fall 0.5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rain-fall {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: -20px 40px;
+  }
+}
+
+/* --- キラキラエフェクト --- */
+.sparkle-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: sparkle-fade infinite alternate ease-in-out;
+}
+
+@keyframes sparkle-fade {
+  0% {
+    opacity: 0.2;
+    transform: scale(0.5);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+
+  100% {
+    opacity: 0.2;
+    transform: scale(0.5);
+  }
+}
+
+/* --- 雪エフェクト --- */
+.snow-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.snowflake {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: snow-fall linear infinite;
+}
+
+@keyframes snow-fall {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+/* ===============================
+   エフェクト選択カルーセル
+   =============================== */
+.effects-carousel {
+  display: flex;
+  overflow-x: auto;
+  padding: 16px 8px;
+  background-color: white;
+  gap: 12px;
+  flex-shrink: 0;
+
+  /* スクロールバー非表示 */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.effects-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.effect-thumbnail {
+  cursor: pointer;
+  text-align: center;
+  font-size: 12px;
+  color: #555;
+  padding: 4px;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.effect-thumbnail.active {
+  border-color: #007aff;
+  color: #007aff;
+  font-weight: bold;
+}
+
+.effect-thumbnail img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+
+.no-effect-icon-wrapper {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.thumbnail-base-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.no-effect-icon-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  background-image: linear-gradient(to top right, transparent calc(50% - 1px), #fff, transparent calc(50% + 1px));
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.thumbnail-placeholder {
+  width: 60px;
+  height: 60px;
+  background-color: #e9e9e9;
+  border-radius: 6px;
+}
+
+/* ===============================
+   サムネイル用ミニエフェクト
+   （本番と同じ動きに統一）
+   =============================== */
+.thumbnail-overlay {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ddd, #bbb);
+}
+
+/* 雨サムネイル */
+.rain-overlay-sample {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(to bottom right,
+      rgba(255, 255, 255, 0.2) 0px,
+      rgba(255, 255, 255, 0.2) 2px,
+      transparent 2px,
+      transparent 20px);
+  background-size: 20px 40px;
+  animation: rain-fall 0.5s linear infinite;
+  pointer-events: none;
+}
+
+/* 雪サムネイル */
+.snow-overlay-sample {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.snowflake-sample {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: snow-fall 2s linear infinite;
+}
+
+/* キラキラサムネイル */
+.sparkle-overlay-sample {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sparkle-sample {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: yellow;
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: sparkle-fade 1.5s infinite alternate ease-in-out;
+}
