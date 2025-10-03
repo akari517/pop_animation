@@ -1,0 +1,186 @@
+/* ==============================
+   動的エフェクト（メイン画像用）
+================================= */
+.light-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 200, 0.6), transparent 70%);
+  animation: light-move 5s infinite alternate ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes light-move {
+  0% {
+    background-position: 30% 30%;
+  }
+
+  100% {
+    background-position: 70% 70%;
+  }
+}
+
+.rain-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(to bottom right, rgba(255, 255, 255, 0.2) 0px, rgba(255, 255, 255, 0.2) 2px, transparent 2px, transparent 20px);
+  background-size: 20px 40px;
+  animation: rain-fall 0.5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rain-fall {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: -20px 40px;
+  }
+}
+
+.sparkle-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  background: yellow;
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: sparkle-fade infinite alternate ease-in-out;
+}
+
+@keyframes sparkle-fade {
+  0% {
+    opacity: 0.2;
+    transform: scale(0.5);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+
+  100% {
+    opacity: 0.2;
+    transform: scale(0.5);
+  }
+}
+
+.snow-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.snowflake {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: snow-fall linear infinite;
+}
+
+@keyframes snow-fall {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+/* ==============================
+   サムネイル用動的エフェクト
+================================= */
+.thumbnail-overlay {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.sample-bg {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #ddd, #bbb);
+}
+
+.light-overlay-small {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 200, 0.6), transparent 70%);
+  pointer-events: none;
+}
+
+.rain-overlay-small {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(transparent, rgba(255, 255, 255, 0.5));
+  background-size: 2px 10px;
+  animation: rainMove 0.6s linear infinite;
+}
+
+@keyframes rainMove {
+  from {
+    background-position: 0 -10px;
+  }
+
+  to {
+    background-position: 0 0;
+  }
+}
+
+.sparkle-overlay-small {
+  position: absolute;
+  inset: 0;
+}
+
+.sparkle-sample {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: yellow;
+  border-radius: 50%;
+  top: calc(20%*var(--i, 1));
+  left: calc(20%*var(--i, 1));
+  animation: sparkleBlink 1s ease-in-out infinite alternate;
+}
+
+@keyframes sparkleBlink {
+  from {
+    opacity: 0.2;
+    transform: scale(0.5);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.snow-overlay-small {
+  position: absolute;
+  inset: 0;
+}
+
+.snowflake-sample {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+  top: -10%;
+  left: calc(20%*var(--i, 1));
+  animation: snowFallThumb 2s linear infinite;
+}
+
+@keyframes snowFallThumb {
+  to {
+    transform: translateY(70px);
+  }
+}
