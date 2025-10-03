@@ -2,42 +2,51 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient"; // Supabaseのログアウトを使う場合はこちら
 import { useAuth } from "../../contexts/AuthContext";
-import { localImageList } from "./ViewingScreen"; // ViewingScreenから画像リストをインポート
 
 function MyPageScreen() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const [likedImages, setLikedImages] = useState([]);
+  const [likedWorks, setLikedWorks] = useState([]); // likedImagesからlikedWorksに名称変更
   const [loading, setLoading] = useState(true);
 
-  // 最初にいいねした画像を取得
+  // 最初にいいねした投稿を取得する
   useEffect(() => {
-    const fetchLikedImages = async () => {
+    const fetchLikedWorks = async () => {
       if (currentUser) {
         try {
           setLoading(true);
-          const { data: userLikes, error } = await supabase
+
+          // 1. ログインユーザーがいいねした投稿のIDリストを取得
+          const { data: userLikes, error: likesError } = await supabase
             .from("likes")
-            .select("image_id")
+            .select("image_id") // image_idにはwork_idが入っている
             .eq("user_id", currentUser.id);
 
-          if (error) throw error;
+          if (likesError) throw likesError;
 
-          const likedImageIds = userLikes.map((like) => like.image_id);
-          // ローカルの画像リストから、いいねしたIDに一致する画像だけをフィルタリング
-          const filteredImages = localImageList.filter((image) =>
-            likedImageIds.includes(image.id)
-          );
-          setLikedImages(filteredImages);
+          const likedWorkIds = userLikes.map((like) => like.image_id);
+
+          // 2. いいねした投稿IDが1つ以上あれば、worksテーブルから詳細情報を取得
+          if (likedWorkIds.length > 0) {
+            const { data: worksData, error: worksError } = await supabase
+              .from("works")
+              .select("*")
+              .in("work_id", likedWorkIds); // .in()でIDリストに一致するものを全て取得
+
+            if (worksError) throw worksError;
+            setLikedWorks(worksData);
+          } else {
+            setLikedWorks([]); // いいねした投稿がない場合は空にする
+          }
         } catch (error) {
-          console.error("いいねした画像の取得エラー:", error);
+          console.error("いいねした投稿の取得エラー:", error);
         } finally {
           setLoading(false);
         }
       }
     };
 
-    fetchLikedImages();
+    fetchLikedWorks();
   }, [currentUser]);
 
   const handleLogout = async () => {
@@ -57,22 +66,22 @@ function MyPageScreen() {
       <h1>マイページ</h1>
       {currentUser && <p>ようこそ, {currentUser.email} さん</p>}
 
-      <h2 style={{ marginTop: "40px" }}>いいねした画像</h2>
+      <h2 style={{ marginTop: "40px" }}>いいねした投稿</h2>
       {loading ? (
         <p>読み込み中...</p>
-      ) : likedImages.length > 0 ? (
+      ) : likedWorks.length > 0 ? (
         <div className="liked-images-grid">
-          {likedImages.map((image) => (
+          {likedWorks.map((work) => (
             <img
-              key={image.id}
-              src={image.src}
-              alt={image.id}
+              key={work.work_id}
+              src={work.url} // work.url を使用
+              alt={work.title} // work.title を使用
               className="liked-image-thumbnail"
             />
           ))}
         </div>
       ) : (
-        <p>いいねした画像はありません。</p>
+        <p>いいねした投稿はありません。</p>
       )}
 
       <button
