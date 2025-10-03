@@ -45,7 +45,6 @@ function ViewingScreen() {
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
 
-  // 最初に投稿といいね情報を読み込む
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -62,35 +61,30 @@ function ViewingScreen() {
         return;
       }
 
-      // 2. ログインしている場合は、いいね情報を取得
+      // ▼▼▼ この部分をよりシンプルに ▼▼▼
+
+      let likedWorkIds = new Set(); // IDの検索を高速化するためSetを使用
+
+      // 2. ログインしている場合のみ、いいね情報を取得してSetに追加
       if (currentUser) {
         const { data: userLikes, error: likesError } = await supabase
           .from("likes")
-          .select("image_id") // ここではwork_idを指す
+          .select("work_id")
           .eq("user_id", currentUser.id);
 
         if (likesError) {
           console.error("いいね情報の取得エラー:", likesError);
+        } else if (userLikes) {
+          likedWorkIds = new Set(userLikes.map((like) => like.work_id));
         }
-
-        const likedWorkIds = userLikes
-          ? userLikes.map((like) => like.image_id)
-          : [];
-
-        // 投稿データに、いいね済みかどうかの情報を追加
-        const mergedWorks = worksData.map((work) => ({
-          ...work,
-          liked: likedWorkIds.includes(work.work_id),
-        }));
-        setWorks(mergedWorks);
-      } else {
-        // ログインしていない場合は、いいねなしの状態で表示
-        const unlikedWorks = worksData.map((work) => ({
-          ...work,
-          liked: false,
-        }));
-        setWorks(unlikedWorks);
       }
+
+      // 3. ログイン状態に関わらず、一度だけ投稿データにいいね情報をマージ
+      const mergedWorks = worksData.map((work) => ({
+        ...work,
+        liked: likedWorkIds.has(work.work_id),
+      }));
+      setWorks(mergedWorks);
 
       setLoading(false);
     };
@@ -118,12 +112,12 @@ function ViewingScreen() {
       await supabase
         .from("likes")
         .delete()
-        .match({ user_id: currentUser.id, image_id: workId });
+        .match({ user_id: currentUser.id, work_id: workId });
     } else {
       // いいね追加
       await supabase
         .from("likes")
-        .insert([{ user_id: currentUser.id, image_id: workId }]);
+        .insert([{ user_id: currentUser.id, work_id: workId }]);
     }
   };
 

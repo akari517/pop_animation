@@ -1,12 +1,10 @@
-// src/components/DetailScreen.jsx
-
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
-import "./DetailScreen.css"; // 詳細画面用のCSSを後で作成
+import "./DetailScreen.css";
 
-// ViewingScreenからアイコンコンポーネントを再利用
+// アイコンコンポーネント
 const HeartIcon = ({ liked, onClick }) => (
   <svg
     onClick={onClick}
@@ -42,45 +40,164 @@ const ShareIcon = ({ onClick }) => (
     <path d="M10 14L21 3"></path>
   </svg>
 );
+
 function DetailScreen() {
-  const { workId } = useParams(); // URLからworkIdを取得
+  const { workId } = useParams();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
+  // === State管理 ===
   const [work, setWork] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showEditOptions, setShowEditOptions] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
+  const [allGenres, setAllGenres] = useState([]);
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // === データ取得処理 ===
+  const fetchWorkAndLikeData = useCallback(async () => {
+    if (!workId) return;
+    setLoading(true);
+    try {
+      const { data: workData, error: workError } = await supabase
+        .from("works")
+        .select(`*, work_genres ( genres ( genre_id, genre_name ) )`)
+        .eq("work_id", workId)
+        .single();
+      if (workError) throw workError;
+
+      let isLiked = false;
+      if (currentUser) {
+        const { data: likeData } = await supabase
+          .from("likes")
+          .select("work_id")
+          .match({ user_id: currentUser.id, work_id: workId })
+          .single();
+        isLiked = !!likeData;
+      }
+
+      setWork({ ...workData, liked: isLiked });
+      setEditedTitle(workData.title);
+      setSelectedGenres(workData.work_genres.map((wg) => wg.genres.genre_id));
+    } catch (error) {
+      if (error.code !== "PGRST116") {
+        console.error("投稿データの取得エラー:", error);
+      }
+      setWork(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [workId, currentUser]);
 
   useEffect(() => {
-    const fetchWork = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("works")
-          .select("*")
-          .eq("work_id", workId)
-          .single(); // .single()で単一のレコードを取得
+    fetchWorkAndLikeData();
 
-        if (error) throw error;
-        setWork(data);
-      } catch (error) {
-        console.error("投稿データの取得エラー:", error);
-        setWork(null); // データが見つからなかった場合
-      } finally {
-        setLoading(false);
-      }
+    const fetchAllGenres = async () => {
+      const { data } = await supabase.from("genres").select("*");
+      setAllGenres(data || []);
     };
+    fetchAllGenres();
+  }, [fetchWorkAndLikeData]);
 
-    fetchWork();
-  }, [workId]);
-
-  // いいね・共有ボタンのハンドラ（ViewingScreenと同様）
-  const handleLike = () => {
-    /* ... いいね処理 ... */
+  // === イベントハンドラ ===
+  const handleLike = async () => {
+    if (!currentUser || !work) {
+      alert("いいねをするにはログインが必要です。");
+      return;
+    }
+    const currentLikedStatus = work.liked;
+    setWork((prevWork) => ({ ...prevWork, liked: !currentLikedStatus }));
+    if (currentLikedStatus) {
+      const { error } = await supabase
+        .from("likes")
+        .delete()
+        .match({ user_id: currentUser.id, work_id: workId });
+      if (error) {
+        console.error("いいね解除エラー:", error);
+        setWork((prevWork) => ({ ...prevWork, liked: currentLikedStatus }));
+      }
+    } else {
+      const { error } = await supabase
+        .from("likes")
+        .insert([{ user_id: currentUser.id, work_id: workId }]);
+      if (error) {
+        console.error("いいね追加エラー:", error);
+        setWork((prevWork) => ({ ...prevWork, liked: currentLikedStatus }));
+      }
+    }
   };
+
   const handleShare = () => {
-    /* ... 共有処理 ... */
+    console.log(`Sharing work: ${workId}`);
+    alert(`作品を共有します: ${workId}`);
   };
 
+  const handleStartEditing = () => {
+    setIsEditing(true);
+    setShowEditOptions(false);
+  };
+
+  const handleGenreChange = (genreId) => {
+    setSelectedGenres((prev) =>
+      prev.includes(genreId)
+        ? prev.filter((id) => id !== genreId)
+        : [...prev, genreId]
+    );
+  };
+
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    try {
+      const { error: updateError } = await supabase
+        .from("works")
+        .update({ title: editedTitle })
+        .eq("work_id", workId);
+      if (updateError) throw updateError;
+
+      const { error: deleteError } = await supabase
+        .from("work_genres")
+        .delete()
+        .eq("work_id", workId);
+      if (deleteError) throw deleteError;
+
+      if (selectedGenres.length > 0) {
+        const newWorkGenres = selectedGenres.map((genreId) => ({
+          work_id: workId,
+          genre_id: genreId,
+        }));
+        const { error: insertError } = await supabase
+          .from("work_genres")
+          .insert(newWorkGenres);
+        if (insertError) throw insertError;
+      }
+      alert("更新が完了しました。");
+      setIsEditing(false);
+
+      // 手動でstateを更新（再取得より高速）
+      const updatedGenresForState = allGenres
+        .filter((genre) => selectedGenres.includes(genre.genre_id))
+        .map((genre) => ({
+          genres: {
+            genre_id: genre.genre_id,
+            genre_name: genre.genre_name,
+          },
+        }));
+      setWork((prevWork) => ({
+        ...prevWork,
+        title: editedTitle,
+        work_genres: updatedGenresForState,
+      }));
+    } catch (error) {
+      console.error("更新エラー:", error);
+      alert("更新に失敗しました。");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // === レンダリング処理 ===
   if (loading) {
     return (
       <div className="detail-container">
@@ -88,7 +205,6 @@ function DetailScreen() {
       </div>
     );
   }
-
   if (!work) {
     return (
       <div className="detail-container">
@@ -97,26 +213,100 @@ function DetailScreen() {
     );
   }
 
-  // ログイン中のユーザーIDと投稿のユーザーIDが一致するかどうかを判定
   const isOwner = currentUser && currentUser.id === work.user_id;
 
   return (
     <div className="detail-container">
-      <button onClick={() => navigate(-1)} className="back-button">
-        ← 戻る
+      <button
+        onClick={() => (isEditing ? setIsEditing(false) : navigate(-1))}
+        className="back-button"
+      >
+        {isEditing ? "キャンセル" : "← 戻る"}
       </button>
 
       <div className="detail-card">
-        <img src={work.url} alt={work.title} className="detail-image" />
-        <div className="detail-actions">
-          <p className="detail-title">{work.title}</p>
-          <div className="detail-buttons">
-            <ShareIcon onClick={handleShare} />
-            <HeartIcon liked={false} onClick={handleLike} />
-            {isOwner && <button className="edit-button">編集</button>}
+        <img
+          src={work.url}
+          alt={isEditing ? editedTitle : work.title}
+          className="detail-image"
+        />
+
+        {isEditing ? (
+          <div className="edit-form-container">
+            <input
+              type="text"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              className="title-input"
+            />
+            <div className="genres-container-edit">
+              {allGenres.map((genre) => (
+                <label key={genre.genre_id}>
+                  <input
+                    type="checkbox"
+                    value={genre.genre_id}
+                    checked={selectedGenres.includes(genre.genre_id)}
+                    onChange={() => handleGenreChange(genre.genre_id)}
+                  />
+                  {genre.genre_name}
+                </label>
+              ))}
+            </div>
+            <button
+              onClick={handleSaveChanges}
+              disabled={isSaving}
+              className="save-button"
+            >
+              {isSaving ? "保存中..." : "保存"}
+            </button>
+          </div>
+        ) : (
+          <>
+            {work.work_genres && work.work_genres.length > 0 && (
+              <div className="genres-container">
+                {work.work_genres.map(({ genres }) => (
+                  <span key={genres.genre_name} className="genre-tag">
+                    #{genres.genre_name}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="detail-actions">
+              <p className="detail-title">{work.title}</p>
+              <div className="detail-buttons">
+                <ShareIcon onClick={handleShare} />
+                <HeartIcon liked={work.liked} onClick={handleLike} />
+                {isOwner && (
+                  <button
+                    onClick={() => setShowEditOptions(true)}
+                    className="edit-button"
+                  >
+                    編集
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {showEditOptions && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>編集メニュー</h3>
+            <button onClick={handleStartEditing}>
+              タイトル・タグを編集する
+            </button>
+            <button disabled>アニメーションを編集する</button>
+            <button
+              onClick={() => setShowEditOptions(false)}
+              className="modal-close-button"
+            >
+              閉じる
+            </button>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

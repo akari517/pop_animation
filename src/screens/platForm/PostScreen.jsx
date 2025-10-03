@@ -1,6 +1,6 @@
 // components/PostScreen.jsx のようなパスに作成
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
@@ -10,13 +10,25 @@ function PostScreen() {
   const [file, setFile] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
   const [title, setTitle] = useState("");
-
+  const [allGenres, setAllGenres] = useState([]); // DBから取得した全ジャンル
+  const [selectedGenres, setSelectedGenres] = useState([]); // 選択されたジャンルのIDを保持
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const fetchGenres = async () => {
+      const { data, error } = await supabase.from("genres").select("*");
+      if (error) {
+        console.error("ジャンルの取得エラー:", error);
+      } else {
+        setAllGenres(data);
+      }
+    };
+    fetchGenres();
+  }, []);
   // ファイルが選択されたときの処理
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -53,6 +65,15 @@ function PostScreen() {
     }
   };
 
+  const handleGenreChange = (genreId) => {
+    setSelectedGenres(
+      (prev) =>
+        prev.includes(genreId)
+          ? prev.filter((id) => id !== genreId) // 既に選択されていれば解除
+          : [...prev, genreId] // 選択されていなければ追加
+    );
+  };
+
   // ステップ2: タイトルを設定してデータを投稿する処理
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,20 +84,37 @@ function PostScreen() {
     setIsSubmitting(true);
 
     try {
+      // 1. worksテーブルに基本データを投稿し、新しいwork_idを取得
       const workData = {
         title: title,
         url: imageUrl,
-        user_id: currentUser ? currentUser.id : null, // ログインしていればIDを、していなければnullをセット
+        user_id: currentUser ? currentUser.id : null,
       };
 
-      const { error } = await supabase
-        .from("works") // 作成したテーブル名
-        .insert([workData]);
+      const { data: newWork, error: workError } = await supabase
+        .from("works")
+        .insert([workData])
+        .select() // 挿入したデータを返すように指定
+        .single(); // 単一のオブジェクトとして受け取る
 
-      if (error) throw error;
+      if (workError) throw workError;
+
+      // 2. 選択されたジャンルがあれば、work_genresテーブルに保存
+      if (selectedGenres.length > 0) {
+        const workGenresData = selectedGenres.map((genreId) => ({
+          work_id: newWork.work_id,
+          genre_id: genreId,
+        }));
+
+        const { error: genreError } = await supabase
+          .from("work_genres")
+          .insert(workGenresData);
+
+        if (genreError) throw genreError;
+      }
 
       alert("投稿が完了しました！");
-      navigate("/home"); // ホーム画面に戻る
+      navigate("/home");
     } catch (error) {
       console.error("投稿エラー:", error);
       alert("投稿に失敗しました。");
@@ -90,20 +128,25 @@ function PostScreen() {
       {step === 1 && (
         <div>
           <h1>ステップ1: 写真を投稿する</h1>
-          <input type="file" accept="image/*" onChange={handleFileChange} />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange} // ← handleFileChange を使用
+          />
           <button
-            onClick={handleUpload}
+            onClick={handleUpload} // ← handleUpload を使用
             className="button"
-            disabled={isUploading || !file}
+            disabled={isUploading || !file} // ← isUploading を使用
           >
-            {isUploading ? "アップロード中..." : "次へ"}
+            {isUploading ? "アップロード中..." : "次へ"}{" "}
+            {/* ← isUploading を使用 */}
           </button>
         </div>
       )}
 
       {step === 2 && (
         <div>
-          <h1>ステップ2: タイトルを設定する</h1>
+          <h1>ステップ2: 詳細を入力</h1>
           <img
             src={imageUrl}
             alt="アップロードプレビュー"
@@ -128,6 +171,33 @@ function PostScreen() {
                 boxSizing: "border-box",
               }}
             />
+
+            {/* ▼▼▼ ジャンル選択のチェックボックスを追加 ▼▼▼ */}
+            <div
+              style={{
+                maxWidth: "300px",
+                margin: "0 auto 20px",
+                textAlign: "left",
+              }}
+            >
+              <p style={{ marginBottom: "5px", fontWeight: "bold" }}>
+                ジャンルを選択 (複数可)
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                {allGenres.map((genre) => (
+                  <label key={genre.genre_id} style={{ cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      value={genre.genre_id}
+                      checked={selectedGenres.includes(genre.genre_id)}
+                      onChange={() => handleGenreChange(genre.genre_id)}
+                    />
+                    {genre.genre_name}
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <button type="submit" className="button" disabled={isSubmitting}>
               {isSubmitting ? "投稿中..." : "投稿を完了する"}
             </button>
