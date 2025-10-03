@@ -28,17 +28,17 @@ const isAuthenticated = false;
 // ルーティング定義をオブジェクトの配列として作成
 export const router = createBrowserRouter([
   //認証関係スクリーン
-  { path: "/auth", Component: AuthScreen },
-  { path: "/login", Component: LoginScreen },
+  { path: "/auth", element: <AuthScreen/> },
+  { path: "/login", element:<LoginScreen/> },
 
   //mainスクリーン
   {
     path: "/", //親ルート
     Component: Layout,
     children: [
-      { index: true, Component: ViewingScreen }, // "/" にアクセス → ViewingPage
-      { path: "home", Component: ViewingScreen },
-      { path: "post", Component: PostScreen },
+      { index: true, element: <ViewingScreen/> }, // "/" にアクセス → ViewingPage
+      { path: "home", element: <ViewingScreen/> },
+      { path: "post", element: <PostScreen/> },
       // {
       //   path: "post",
       //   Component: () => (
@@ -48,26 +48,26 @@ export const router = createBrowserRouter([
       //   ),
       // },
 
-      { path: "favorites", Component: FavoritesScreen },
-      { path: "mypage", Component: MyPageScreen },
-      { path: "test_post", Component: TestPostScreen },
+      { path: "favorites", element: <FavoritesScreen/> },
+      { path: "mypage", element: <MyPageScreen/> },
+      //{ path: "test_post", Component: TestPostScreen },
     ],
   },
 
   {
-    path: "/animation",
-    Component: AnimationHomeScreen,
+    path: "animation",
+    element: <AnimationHomeScreen/>,
     children: [
-      { index: true, Component: AnimationHomeScreen },
-      { path: "sketch", Component: SketchScreen },
-      { path: "stamp", Component: StampScreen },
-      { path: "frameMotion", Component: FrameMotionScreen },
-      { path: "effect", Component: EffectScreen },
-      { path: "frame", Component: FrameScreen },
+      { index: true, element: <AnimationHomeScreen/> },
+      { path: "sketch", element: <SketchScreen/> },
+      { path: "stamp", element: <StampScreen/> },
+      { path: "frameMotion", element: <FrameMotionScreen/> },
+      { path: "effect", element: <EffectScreen/> },
+      { path: "frame", element: <FrameScreen/> },
     ],
   },
 
   // 未定義のルートは "/" にリダイレクト
   //TODO: ワイルドカード＊ルートを調べる
-  { path: "*", Component: () => <Navigate to="/" /> },
+  { path: "*", element: () => <Navigate to="/" /> },
 ]);
