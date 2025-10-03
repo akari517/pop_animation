@@ -20,6 +20,7 @@ import StampScreen from "../screens/animation/StampScreen";
 import FrameMotionScreen from "../screens/animation/FrameMotionScreen";
 import EffectScreen from "../screens/animation/EffectScreen";
 import FrameScreen from "../screens/animation/FrameScreen";
+import AnimationMenu from "../components/AnimationMenu";
 
 
 // 認証状態の管理（認証していない）
@@ -58,7 +59,7 @@ export const router = createBrowserRouter([
     path: "animation",
     element: <AnimationHomeScreen/>,
     children: [
-      { index: true, element: <AnimationHomeScreen/> },
+      { index: true, element: <AnimationMenu/> },
       { path: "sketch", element: <SketchScreen/> },
       { path: "stamp", element: <StampScreen/> },
       { path: "frameMotion", element: <FrameMotionScreen/> },

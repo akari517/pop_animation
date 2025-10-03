@@ -7,20 +7,16 @@ import AddIcon from "@mui/icons-material/Add";
 import { RouterProvider } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Box, Button } from "@mui/material";
+import { Outlet } from 'react-router-dom';
+import AnimationMenu from "../../components/AnimationMenu";
 
 function AnimationHomeScreen() {
   return (
-     <div className="screen-container">
-       <Link to="/animation" className="button" style={{ backgroundColor: "#888" }}></Link>
-      <h1>アニメーションのホーム画面</h1>
-      <p>この画面は現在準備中です。</p>
-      {/* ログアウト機能を想定 */}
-      <Link to="/auth" className="button" style={{ backgroundColor: "#888" }}>
-        ログアウト
-      </Link>
+    <div className="screen-container">
+      <h1>アニメーション画面</h1>
+      <Outlet />
     </div>
   );
 }
 
 export default AnimationHomeScreen;
-
