@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Stage, Layer, Line, Circle, Image } from "react-konva";
-import useImage from "use-image";
+
 import {
   Box,
   Button,
@@ -8,7 +8,7 @@ import {
   ToggleButtonGroup,
 } from "@mui/material";
 
-//
+//画像のpath
 import image2 from "../../assets/image4.jpg";
 
 import { getLineProps } from "./PenTools";
@@ -243,7 +243,7 @@ const SketchScreen = () => {
 
         </Stage>
       </Box>
-
+      
       <Box height={8} />
 
       {/* カラーパレット */}
