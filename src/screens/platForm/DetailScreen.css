@@ -1,0 +1,153 @@
+/* src/components/DetailScreen.css */
+.detail-container {
+  padding: 20px;
+  background-color: #f0f0f7;
+  min-height: 100vh;
+}
+.back-button {
+  background: none;
+  border: 1px solid #ccc;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+.detail-card {
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+.detail-image {
+  width: 100%;
+  height: auto;
+}
+.detail-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+}
+.detail-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+.detail-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.edit-button {
+  background-color: #007aff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* src/components/DetailScreen.css */
+
+/* ... 既存のスタイル ... */
+
+/* ▼▼▼ 追加 ▼▼▼ */
+.genres-container {
+  padding: 12px 16px 0; /* 上下左右の余白 */
+  display: flex;
+  flex-wrap: wrap; /* 折り返しを許可 */
+  gap: 8px; /* タグ間のスペース */
+}
+
+.genre-tag {
+  background-color: #eef2f7; /* 背景色 */
+  color: #334155; /* 文字色 */
+  padding: 4px 10px; /* 内側の余白 */
+  border-radius: 15px; /* 角を丸く */
+  font-size: 0.8rem; /* 文字サイズ */
+  font-weight: 500;
+}
+
+/* src/components/DetailScreen.css */
+
+/* ... 既存のスタイル ... */
+
+/* ▼▼▼ モーダルのスタイルを追加 ▼▼▼ */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 90%;
+  max-width: 300px;
+}
+.modal-content button {
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  border-radius: 5px;
+}
+.modal-close-button {
+  margin-top: 10px;
+  background-color: #eee !important;
+}
+
+/* ▼▼▼ 編集フォームのスタイルを追加 ▼▼▼ */
+.edit-form-container {
+  padding: 16px;
+}
+.title-input {
+  width: 100%;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+.genres-container-edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.genres-container-edit label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.save-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+.save-button:disabled {
+  background-color: #94d3a2;
+  cursor: not-allowed;
+}

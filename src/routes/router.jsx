@@ -10,6 +10,7 @@ import FavoritesScreen from "../screens/platForm/FavoritesScreen";
 import MyPageScreen from "../screens/platForm/MyPageScreen";
 import Layout from "../components/Layout";
 import TestPostScreen from "../screens/platForm/TestPostScreen";
+import DetailScreen from "../screens/platForm/DetailScreen";
 
 // 認証状態の管理（認証していない）
 const isAuthenticated = false;
@@ -42,7 +43,7 @@ export const router = createBrowserRouter([
       { path: "test_post", Component: TestPostScreen },
     ],
   },
-
+  { path: "/work/:workId", element: <DetailScreen /> },
   // 未定義のルートは "/" にリダイレクト
   { path: "*", Component: () => <Navigate to="/" /> },
 ]);

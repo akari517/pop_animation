@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./ViewingScreen.css";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
-
+import { Link } from "react-router-dom";
 // アイコンコンポーネント (変更なし)
 const HeartIcon = ({ liked, onClick }) => (
   <svg
@@ -45,7 +45,6 @@ function ViewingScreen() {
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
 
-  // 最初に投稿といいね情報を読み込む
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -62,35 +61,30 @@ function ViewingScreen() {
         return;
       }
 
-      // 2. ログインしている場合は、いいね情報を取得
+      // ▼▼▼ この部分をよりシンプルに ▼▼▼
+
+      let likedWorkIds = new Set(); // IDの検索を高速化するためSetを使用
+
+      // 2. ログインしている場合のみ、いいね情報を取得してSetに追加
       if (currentUser) {
         const { data: userLikes, error: likesError } = await supabase
           .from("likes")
-          .select("image_id") // ここではwork_idを指す
+          .select("work_id")
           .eq("user_id", currentUser.id);
 
         if (likesError) {
           console.error("いいね情報の取得エラー:", likesError);
+        } else if (userLikes) {
+          likedWorkIds = new Set(userLikes.map((like) => like.work_id));
         }
-
-        const likedWorkIds = userLikes
-          ? userLikes.map((like) => like.image_id)
-          : [];
-
-        // 投稿データに、いいね済みかどうかの情報を追加
-        const mergedWorks = worksData.map((work) => ({
-          ...work,
-          liked: likedWorkIds.includes(work.work_id),
-        }));
-        setWorks(mergedWorks);
-      } else {
-        // ログインしていない場合は、いいねなしの状態で表示
-        const unlikedWorks = worksData.map((work) => ({
-          ...work,
-          liked: false,
-        }));
-        setWorks(unlikedWorks);
       }
+
+      // 3. ログイン状態に関わらず、一度だけ投稿データにいいね情報をマージ
+      const mergedWorks = worksData.map((work) => ({
+        ...work,
+        liked: likedWorkIds.has(work.work_id),
+      }));
+      setWorks(mergedWorks);
 
       setLoading(false);
     };
@@ -99,7 +93,8 @@ function ViewingScreen() {
   }, [currentUser]);
 
   // いいねボタンの処理
-  const handleLike = async (workId, currentLikedStatus) => {
+  const handleLike = async (event, workId, currentLikedStatus) => {
+    event.preventDefault();
     if (!currentUser) {
       alert("いいねをするにはログインが必要です。");
       return;
@@ -117,16 +112,17 @@ function ViewingScreen() {
       await supabase
         .from("likes")
         .delete()
-        .match({ user_id: currentUser.id, image_id: workId });
+        .match({ user_id: currentUser.id, work_id: workId });
     } else {
       // いいね追加
       await supabase
         .from("likes")
-        .insert([{ user_id: currentUser.id, image_id: workId }]);
+        .insert([{ user_id: currentUser.id, work_id: workId }]);
     }
   };
 
-  const handleShare = (id) => {
+  const handleShare = (event, id) => {
+    event.preventDefault();
     console.log(`Sharing work: ${id}`);
     alert(`作品を共有します: ${id}`);
   };
@@ -142,19 +138,29 @@ function ViewingScreen() {
   return (
     <div className="feed-container">
       {works.map((work) => (
-        <div key={work.work_id} className="image-card">
-          <img src={work.url} alt={work.title} className="feed-image" />
-          <div className="actions-container">
-            <p className="work-title">{work.title}</p>
-            <div className="icon-buttons">
-              <ShareIcon onClick={() => handleShare(work.work_id)} />
-              <HeartIcon
-                liked={work.liked}
-                onClick={() => handleLike(work.work_id, work.liked)}
-              />
+        <Link
+          to={`/work/${work.work_id}`}
+          key={work.work_id}
+          className="work-card-link"
+        >
+          <div key={work.work_id} className="image-card">
+            <img src={work.url} alt={work.title} className="feed-image" />
+            <div className="actions-container">
+              <p className="work-title">{work.title}</p>
+              <div className="icon-buttons">
+                <ShareIcon
+                  onClick={(event) => handleShare(event, work.work_id)}
+                />
+                <HeartIcon
+                  liked={work.liked}
+                  onClick={(event) =>
+                    handleLike(event, work.work_id, work.liked)
+                  }
+                />
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );
