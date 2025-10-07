@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // Linkをインポート
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
-
-// ▼▼▼ MUIのコンポーネントをインポート ▼▼▼
 import { Box, Tabs, Tab } from "@mui/material";
 
 // 投稿一覧を表示するための共通コンポーネント
@@ -14,12 +12,14 @@ const WorksGrid = ({ works }) => {
   return (
     <div className="liked-images-grid">
       {works.map((work) => (
-        <img
-          key={work.work_id}
-          src={work.url}
-          alt={work.title}
-          className="liked-image-thumbnail"
-        />
+        // ▼▼▼ Linkコンポーネントで画像を囲む ▼▼▼
+        <Link to={`/work/${work.work_id}`} key={work.work_id}>
+          <img
+            src={work.url}
+            alt={work.title}
+            className="liked-image-thumbnail"
+          />
+        </Link>
       ))}
     </div>
   );
@@ -29,16 +29,13 @@ function MyPageScreen() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
-  // ▼▼▼ Stateの追加と変更 ▼▼▼
-  const [tabValue, setTabValue] = useState(0); // 0: いいね, 1: 自分の投稿
+  const [tabValue, setTabValue] = useState(0);
   const [likedWorks, setLikedWorks] = useState([]);
-  const [myWorks, setMyWorks] = useState([]); // 自分の投稿を保持するstate
+  const [myWorks, setMyWorks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ▼▼▼ データ取得ロジックをタブに応じて変更 ▼▼▼
   useEffect(() => {
     if (!currentUser) return;
-
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -49,7 +46,6 @@ function MyPageScreen() {
             .select("work_id")
             .eq("user_id", currentUser.id);
           if (likesError) throw likesError;
-
           const likedWorkIds = userLikes.map((like) => like.work_id);
           if (likedWorkIds.length > 0) {
             const { data: worksData, error: worksError } = await supabase
@@ -77,9 +73,8 @@ function MyPageScreen() {
         setLoading(false);
       }
     };
-
     fetchData();
-  }, [currentUser, tabValue]); // tabValueが変わるたびにデータを再取得
+  }, [currentUser, tabValue]);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -89,18 +84,19 @@ function MyPageScreen() {
       navigate("/login");
     }
   };
+
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
+
   return (
     <div
       className="screen-container"
-      style={{ justifyContent: "flex-start", paddingTop: "20px" }}
+      style={{ justifyContent: "flex-start", paddingTop: "20px", gap: "20px" }}
     >
       <h1>マイページ</h1>
       {currentUser && <p>ようこそ, {currentUser.email} さん</p>}
 
-      {/* ▼▼▼ MUIのタブコンポーネントを追加 ▼▼▼ */}
       <Box sx={{ width: "100%", borderBottom: 1, borderColor: "divider" }}>
         <Tabs value={tabValue} onChange={handleTabChange} centered>
           <Tab label="いいね" />
@@ -108,7 +104,6 @@ function MyPageScreen() {
         </Tabs>
       </Box>
 
-      {/* ▼▼▼ タブに応じて表示内容を切り替え ▼▼▼ */}
       {loading ? (
         <p>読み込み中...</p>
       ) : (
