@@ -21,6 +21,7 @@ function FrameMotionScreen() {
   const stageSize = useStageSize();
   const [stamps, setStamps] = useState([]);
   const [selectedGif, setSelectedGif] = useState(null);
+  const [selectedStampId, setSelectedStampId] = useState(null);
 
   const {
     handleDown,
@@ -41,50 +42,60 @@ function FrameMotionScreen() {
   const handleGifSelect = (gif) => {
     console.log("GIF選択:", gif.name);
     setSelectedGif(gif);
+    setSelectedStampId(null);
   };
 
   // ステージクリックハンドラー
   const handleStageClick = (e) => {
+    // If a gif is selected, place it
     if (selectedGif) {
       const stage = e.target.getStage();
       const pointer = stage.getPointerPosition();
 
       console.log("ステージクリック - 選択中:", selectedGif.name, "位置:", pointer);
 
-      // 新しいスタンプを追加
       const newStamp = {
         id: Date.now(),
         src: selectedGif.src,
         name: selectedGif.name,
-        x: pointer.x - 50, // 画像の中心に配置するため50pxずらす
+        x: pointer.x - 50,
         y: pointer.y - 50,
         width: 100,
         height: 100,
       };
 
       console.log("新しいスタンプ追加:", newStamp);
-      setStamps(prev => {
-        console.log("現在のスタンプ数:", prev.length + 1);
-        return [...prev, newStamp];
-      });
+      setStamps(prev => [...prev, newStamp]);
 
-      // 追加したら選択を解除する
+      // 追加したらGIF選択を解除（意図通り選択解除）
       setSelectedGif(null);
-    } else {
-      // 描画機能はそのまま動作させる
-      handleDown(e);
+      return;
     }
+
+    // Clicking empty stage -> deselect any selected stamp
+    setSelectedStampId(null);
+
+    // 通常の描画処理
+    handleDown(e);
   };
 
-  // ドラッグオーバーハンドラー（不要になったが互換性のため残す）
-  const handleDragOver = (e) => {
-    e.preventDefault();
+  // 選択されたスタンプを削除
+  const deleteSelectedStamp = () => {
+    if (!selectedStampId) return;
+    setStamps(prev => prev.filter(s => s.id !== selectedStampId));
+    setSelectedStampId(null);
   };
 
-  // ドロップハンドラー（不要になったが互換性のため残す）
-  const handleDrop = (e) => {
-    e.preventDefault();
-  };
+  // Deleteキーで削除
+  useEffect(() => {
+    const onKey = (ev) => {
+      if (ev.key === "Delete" || ev.key === "Backspace") {
+        deleteSelectedStamp();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedStampId, stamps]);
 
   return (
     <div className="frame-container">
@@ -99,9 +110,10 @@ function FrameMotionScreen() {
       }}>
         <strong>使い方:</strong> アニメーションGIFを選択してから、ステージ上の任意の位置をクリックして配置してください。<br/>
         {selectedGif && <span style={{ color: "#ff6b6b" }}>選択中: {selectedGif.name}</span>}
+        {selectedStampId && <span style={{ marginLeft: 12, color: "#333" }}>スタンプ選択中（Deleteで削除できます）</span>}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "row" }}>
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
         {gifs.map((gif, index) => (
           <img
             key={index}
@@ -119,6 +131,15 @@ function FrameMotionScreen() {
             onClick={() => handleGifSelect(gif)}
           />
         ))}
+        {/* optional delete button */}
+        {selectedStampId && (
+          <button
+            style={{ marginLeft: 12, padding: "8px 12px" }}
+            onClick={deleteSelectedStamp}
+          >
+            Delete selected stamp
+          </button>
+        )}
       </div>
 
       <Stage
@@ -130,8 +151,8 @@ function FrameMotionScreen() {
         onTouchStart={handleStageClick}
         onTouchMove={handleMove}
         onTouchEnd={endDrawing}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => e.preventDefault()}
         style={{ cursor: selectedGif ? "crosshair" : "default" }}
       >
         {/* 背景画像 */}
@@ -144,11 +165,17 @@ function FrameMotionScreen() {
           {stamps.map((stamp) => (
             <StampImage
               key={stamp.id}
+              id={stamp.id}
               src={stamp.src}
               x={stamp.x}
               y={stamp.y}
               width={stamp.width}
               height={stamp.height}
+              isSelected={selectedStampId === stamp.id}
+              onSelect={(id) => {
+                // toggle selection
+                setSelectedStampId(prev => (prev === id ? null : id));
+              }}
             />
           ))}
         </Layer>

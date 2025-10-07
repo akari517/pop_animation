@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from "react";
-import { Image as KonvaImage } from "react-konva";
+import { Group, Rect, Image as KonvaImage } from "react-konva";
 
 // アニメーションGIFを表示するコンポーネント
-const StampImage = ({ src, x, y, width, height, ...rest }) => {
-  const nodeRef = useRef(null);
+const StampImage = ({ id, src, x, y, width, height, isSelected, onSelect, ...rest }) => {
+  const nodeRef = useRef(null); // will be attached to Group
   const domImgRef = useRef(null);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const StampImage = ({ src, x, y, width, height, ...rest }) => {
     img.style.opacity = rest.opacity ?? "1";
 
     const updatePosition = () => {
-      // get absolute position of the Konva node, then convert to DOM coords
+      // get absolute position of the Konva node (group), then convert to DOM coords
       const absPos = node.getAbsolutePosition();
       const scale = stage.scaleX(); // assume uniform scale
       const left = absPos.x * scale;
@@ -73,21 +73,41 @@ const StampImage = ({ src, x, y, width, height, ...rest }) => {
       }
       domImgRef.current = null;
     };
-  }, [src, x, y, width, height, rest, nodeRef]);
+  }, [id, src, x, y, width, height, rest, nodeRef]);
 
-  // Keep a Konva node in the layer so stamps keep layering and positional info,
-  // but don't supply an image to Konva (we use DOM img for visible GIF).
+  // Konva Group used for position/rotation info; transparent Rect captures clicks
   return (
-    <KonvaImage
-      ref={nodeRef}
-      x={x}
-      y={y}
-      width={width}
-      height={height}
-      listening={false}
-      visible={false} // invisible in canvas; only used for position
-      {...rest}
-    />
+    <Group ref={nodeRef} x={x} y={y}>
+      {/* invisible konva image placeholder (keeps layering) */}
+      <KonvaImage
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        listening={false}
+        visible={false}
+        {...rest}
+      />
+      {/* transparent rectangle to capture clicks / show selection outline */}
+      <Rect
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        fill={"rgba(0,0,0,0)"} // fully transparent to let DOM img be visible
+        stroke={isSelected ? "#ff6b6b" : null}
+        strokeWidth={isSelected ? 3 : 0}
+        listening={true}
+        onClick={(e) => {
+          e.cancelBubble = true; // prevent Stage click handler
+          if (onSelect) onSelect(id);
+        }}
+        onTap={(e) => {
+          e.cancelBubble = true;
+          if (onSelect) onSelect(id);
+        }}
+      />
+    </Group>
   );
 };
 
