@@ -6,10 +6,16 @@ import URLImage from "../../components/URLImage.jsx";
 import StampImage from "../../components/StampImage.jsx";
 import { useStageSize } from "../../components/useStageSize.jsx";
 import { useDrawing } from "../../components/useDrawing";
+// TODO: スタンプの大きさ変更、回転機能など
+// TODO: スタンプの削除機能
+// TODO: やり直し機能
 
 // TODO: 動的にとってこれるようにする
 import book_flip from "../../assets/book_flip.gif";
 import tree_wind from "../../assets/tree_wind.gif";
+import star from "../../assets/star.gif";
+import heart_pulse from "../../assets/heart_pulse.gif";
+import pointer from "../../assets/pointer.gif";
 
 function FrameMotionScreen() {
   const stageSize = useStageSize();
@@ -25,6 +31,9 @@ function FrameMotionScreen() {
   const gifs = [
     { src: book_flip, name: "book_flip" },
     { src: tree_wind, name: "tree_wind" },
+    { src: pointer, name: "pointer" },
+    { src: heart_pulse, name: "heart_pulse" },
+    { src: star, name: "star" },
   ];
 
   // Konvaエラー処理とブラウザ警告
