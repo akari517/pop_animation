@@ -3,8 +3,6 @@
    =============================== */
 
 /* 最初にデフォルトの余白をリセット */
-/* 最初にデフォルトの余白をリセット */
-
 body,
 html {
   margin: 0;
@@ -113,51 +111,47 @@ html {
 /* ===============================
    本体フレーム
    =============================== */
+/* シンプルフレーム */
 .simple-frame {
   border: 15px solid red;
-  /* 動的に色変更したいならJS側でstyle制御 */
 }
 
+/* 花柄フレーム */
 .flower-frame {
   border: 15px solid pink;
-  border-image: url("../frame/flower-frame.png") 30 round;
+  border-image: url("../Frames/flower-frame.png") 30 round;
 }
 
-/* 額縁フレーム */
+/* 額縁フレーム1 */
 .frame-overlay.image-frame {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: url("/frame/frame-01.png");
+  background-image: url("/Frames/frame-01.png");
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
 
-  /* ここで拡大 */
-  transform: scale(1.1);
-  /* 10%拡大 */
-  transform-origin: center;
   /* 中心を基準に拡大 */
+  transform: scale(1.1);
+  transform-origin: center;
 }
 
+/* 額縁フレーム2 */
 .frame-overlay.image-frame2 {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: url("/frame/frame-02.png");
+  background-image: url("/Frames/frame-02.png");
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
 
-  /* ここで拡大 */
-  transform: scale(1.22);
-  /* 10%拡大 */
-  transform-origin: center;
   /* 中心を基準に拡大 */
+  transform: scale(1.22);
+  transform-origin: center;
 }
 
 /* ===============================
-   エフェクト選択カルーセル
+   選択カルーセル
    =============================== */
 .effects-carousel {
   display: flex;
@@ -254,24 +248,24 @@ html {
 /* サムネイル - シンプルフレーム */
 .thumb-overlay.simple-frame-thumb {
   border: 3px solid red;
-  /* サムネイルは固定色でOK */
 }
 
 /* サムネイル - 花柄 */
 .thumb-overlay.flower-frame-thumb {
   border: 3px solid pink;
-  border-image: url("/frame/flower-frame.png") 10 round;
+  border-image: url("/Frames/flower-frame.png") 10 round;
 }
 
-/* サムネイル - 額縁 */
+/* サムネイル - 額縁1 */
 .thumb-overlay.image-frame-thumb {
-  background-image: url("/frame/frame-01.png");
+  background-image: url("/Frames/frame-01.png");
   background-size: cover;
   background-position: center;
 }
 
+/* サムネイル - 額縁2 */
 .thumb-overlay.image-frame-thumb2 {
-  background-image: url("/frame/frame-02.png");
+  background-image: url("/Frames/frame-02.png");
   background-size: cover;
   background-position: center;
 }
