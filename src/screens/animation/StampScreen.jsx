@@ -67,6 +67,9 @@ function FrameMotionScreen() {
         console.log("現在のスタンプ数:", prev.length + 1);
         return [...prev, newStamp];
       });
+
+      // 追加したら選択を解除する
+      setSelectedGif(null);
     } else {
       // 描画機能はそのまま動作させる
       handleDown(e);
