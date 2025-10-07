@@ -6,6 +6,7 @@ import URLImage from "../../components/URLImage.jsx";
 import { useStageSize } from "../../components/useStageSize.jsx";
 import { useDrawing } from "../../components/useDrawing";
 
+// フレームモーションアニメーションのサンプル
 function FrameMotionScreen() {
   const stageSize = useStageSize();
   const [tick, setTick] = useState(0);
