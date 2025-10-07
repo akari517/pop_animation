@@ -110,7 +110,6 @@ function FrameMotionScreen() {
       }}>
         <strong>使い方:</strong> アニメーションGIFを選択してから、ステージ上の任意の位置をクリックして配置してください。<br/>
         {selectedGif && <span style={{ color: "#ff6b6b" }}>選択中: {selectedGif.name}</span>}
-        {selectedStampId && <span style={{ marginLeft: 12, color: "#333" }}>スタンプ選択中（Deleteで削除できます）</span>}
       </div>
 
       <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
