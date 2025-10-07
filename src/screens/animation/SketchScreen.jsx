@@ -8,6 +8,8 @@ import {
   ToggleButtonGroup,
 } from "@mui/material";
 
+import { useDrawing } from "../../components/useDrawing";
+
 //画像のpath
 import image2 from "../../assets/image4.jpg";
 
@@ -17,93 +19,23 @@ import { useStageSize } from "../../components/useStageSize.jsx";
 
 const SketchScreen = () => {
   const isDrawing = useRef(false);
-  const [tool, setTool] = useState("pen"); // pen | eraser | glitter | neon
-  const [color, setColor] = useState("#0ff");
-  const [shapes, setShapes] = useState([]);
   const history = useRef([[]]);
-  const historyStep = useRef(0);
-
-
+  const historyStep = useRef(0)
   const stageSize = useStageSize();
 
-  // 描画開始
-  const startDrawing = (pos) => {
-    isDrawing.current = true;
-    setShapes((prev) => [...prev, { points: [pos.x, pos.y], color, tool }]);
-  };
-
-  // 描画中
-  const drawMove = (pos) => {
-    if (!isDrawing.current) return;
-    setShapes((prev) => {
-      const lastIdx = prev.length - 1;
-      const lastShape = prev[lastIdx];
-      return [
-        ...prev.slice(0, lastIdx),
-        { ...lastShape, points: [...lastShape.points, pos.x, pos.y] },
-      ];
-    });
-  };
-
-  // 描画終了
-  const endDrawing = () => {
-    if (!isDrawing.current) return;
-    isDrawing.current = false;
-    const newHistory = history.current.slice(0, historyStep.current + 1);
-    newHistory.push([...shapes]);
-    history.current = newHistory;
-    historyStep.current = newHistory.length - 1;
-    setShapes([...shapes]);
-  };
-
-  // 元に戻す・やり直し・クリア
-  const handleUndo = () => {
-    if (historyStep.current === 0) return;
-    historyStep.current -= 1;
-    setShapes(history.current[historyStep.current]);
-  };
-  const handleRedo = () => {
-    if (historyStep.current === history.current.length - 1) return;
-    historyStep.current += 1;
-    setShapes(history.current[historyStep.current]);
-  };
-  const handleClear = () => {
-    setShapes([]);
-    history.current = [[]];
-    historyStep.current = 0;
-  };
-
-  // マウス・タッチ座標取得
-  const getPointerPos = (e) => {
-    if (e.evt.touches && e.evt.touches.length > 0) {
-      const touch = e.evt.touches[0];
-      const stage = e.target.getStage();
-      return stage.getPointerPosition(touch);
-    }
-    return e.target.getStage().getPointerPosition();
-  };
-
-  const handleDown = (e) => {
-    const pos = getPointerPos(e);
-    if (!pos) return;
-    startDrawing(pos);
-  };
-  const handleMove = (e) => {
-    const pos = getPointerPos(e);
-    if (!pos) return;
-    drawMove(pos);
-  };
-
-  // キャンバス外で描画終了
-  useEffect(() => {
-    const handleGlobalUp = () => (isDrawing.current = false);
-    document.addEventListener("mouseup", handleGlobalUp);
-    document.addEventListener("touchend", handleGlobalUp);
-    return () => {
-      document.removeEventListener("mouseup", handleGlobalUp);
-      document.removeEventListener("touchend", handleGlobalUp);
-    };
-  }, []);
+  const {
+      shapes,
+      color,
+      setColor,
+      tool,
+      setTool,
+      handleDown,
+      handleMove,
+      endDrawing,
+      undo,
+      redo,
+      clear
+    } = useDrawing([], "#0ff", "pen");
 
   return (
     <Box width="100%" p={1}>
@@ -128,9 +60,9 @@ const SketchScreen = () => {
         </ToggleButtonGroup>
 
         <Box display="flex" gap={1}>
-          <Button onClick={handleUndo} variant="outlined" size="small">Undo</Button>
-          <Button onClick={handleRedo} variant="outlined" size="small">Redo</Button>
-          <Button onClick={handleClear} variant="contained" size="small" color="error">Clear</Button>
+          <Button onClick={undo} variant="outlined" size="small">Undo</Button>
+          <Button onClick={redo} variant="outlined" size="small">Redo</Button>
+          <Button onClick={clear} variant="contained" size="small" color="error">Clear</Button>
         </Box>
       </Box>
 
@@ -239,8 +171,7 @@ const SketchScreen = () => {
 
     </React.Fragment>
   ))}
-</Layer>
-
+  </Layer>
         </Stage>
       </Box>
       
