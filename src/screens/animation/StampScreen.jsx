@@ -36,23 +36,6 @@ function FrameMotionScreen() {
     { src: star, name: "star" },
   ];
 
-  // Konvaエラー処理とブラウザ警告
-  useEffect(() => {
-    // Konvaエラーを抑制する処理
-    const originalWarn = console.warn;
-    console.warn = (...args) => {
-      if (args[0] && args[0].includes && args[0].includes("Brave shield")) {
-        // Braveシールド警告を抑制しないが、ユーザーに通知
-        console.log("⚠️ Braveブラウザのシールド機能が検出されました。正常に動作しない場合はシールドを無効にしてください。");
-      } else {
-        originalWarn.apply(console, args);
-      }
-    };
-
-    return () => {
-      console.warn = originalWarn;
-    };
-  }, []);
 
   // GIF選択ハンドラー
   const handleGifSelect = (gif) => {
