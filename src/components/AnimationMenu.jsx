@@ -11,7 +11,7 @@ function AnimationMenu() {
   const menuItems = [
     { path: "sketch", label: "落書き", icon: <HomeIcon /> },
     { path: "stamp", label: "スタンプ", icon: <EmojiEmotionsIcon /> },
-    { path: "frameMotion", label: "囲って", icon: <CropSquareIcon /> },
+    { path: "frameMotion", label: "囲ってモーション", icon: <CropSquareIcon /> },
     { path: "effect", label: "エフェクト", icon: <AutoAwesomeIcon /> },
     { path: "frame", label: "フレーム", icon: <PhotoFrameIcon /> },
   ];
@@ -50,6 +50,7 @@ const styles = {
     zIndex: 1000,
   },
   link: {
+    flex: 1,
     textDecoration: "none",
     color: "#fff",
     fontSize: "12px",
