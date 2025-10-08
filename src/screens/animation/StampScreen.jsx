@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Stage, Layer } from "react-konva";
 import "./FrameMotionScreen.css";
 import image2 from "../../assets/image4.jpg";
@@ -78,6 +78,25 @@ function FrameMotionScreen() {
     handleDown(e);
   };
 
+  // Undo: 直前に追加したスタンプを取り消す
+  const undoLastStamp = () => {
+    setStamps(prev => (prev.length ? prev.slice(0, -1) : prev));
+    // 選択解除も行う
+    setSelectedStampId(null);
+  };
+
+  // キーボードショートカット: Ctrl/Cmd + Z で Undo
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      const isUndo = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z";
+      if (isUndo) {
+        e.preventDefault();
+        undoLastStamp();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [stamps]);
 
   return (
     <div className="frame-container">
@@ -112,6 +131,20 @@ function FrameMotionScreen() {
             onClick={() => handleGifSelect(gif)}
           />
         ))}
+
+        {/* Undo ボタン */}
+        <button
+          onClick={undoLastStamp}
+          disabled={stamps.length === 0}
+          style={{
+            marginLeft: 12,
+            padding: "8px 12px",
+            cursor: stamps.length === 0 ? "not-allowed" : "pointer",
+            opacity: stamps.length === 0 ? 0.6 : 1
+          }}
+        >
+          Undo
+        </button>
       </div>
 
       <Stage
