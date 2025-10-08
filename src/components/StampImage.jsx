@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from "react";
-import { Group, Rect, Image as KonvaImage } from "react-konva";
+import { Group, Image as KonvaImage } from "react-konva";
 
 // アニメーションGIFを表示するコンポーネント
-const StampImage = ({ id, src, x, y, width, height, isSelected, onSelect, ...rest }) => {
+const StampImage = ({ id, src, x, y, width, height, ...rest }) => {
   const nodeRef = useRef(null); // will be attached to Group
   const domImgRef = useRef(null);
 
@@ -75,10 +75,9 @@ const StampImage = ({ id, src, x, y, width, height, isSelected, onSelect, ...res
     };
   }, [id, src, x, y, width, height, rest, nodeRef]);
 
-  // Konva Group used for position/rotation info; transparent Rect captures clicks
+  // Konva Group used for position/rotation info; invisible Konva image keeps layering
   return (
     <Group ref={nodeRef} x={x} y={y}>
-      {/* invisible konva image placeholder (keeps layering) */}
       <KonvaImage
         x={0}
         y={0}
@@ -87,25 +86,6 @@ const StampImage = ({ id, src, x, y, width, height, isSelected, onSelect, ...res
         listening={false}
         visible={false}
         {...rest}
-      />
-      {/* transparent rectangle to capture clicks / show selection outline */}
-      <Rect
-        x={0}
-        y={0}
-        width={width}
-        height={height}
-        fill={"rgba(0,0,0,0)"} // fully transparent to let DOM img be visible
-        stroke={isSelected ? "#ff6b6b" : null}
-        strokeWidth={isSelected ? 3 : 0}
-        listening={true}
-        onClick={(e) => {
-          e.cancelBubble = true; // prevent Stage click handler
-          if (onSelect) onSelect(id);
-        }}
-        onTap={(e) => {
-          e.cancelBubble = true;
-          if (onSelect) onSelect(id);
-        }}
       />
     </Group>
   );

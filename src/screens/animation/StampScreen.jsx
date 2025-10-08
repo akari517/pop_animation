@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Stage, Layer } from "react-konva";
 import "./FrameMotionScreen.css";
 import image2 from "../../assets/image4.jpg";
@@ -47,7 +47,6 @@ function FrameMotionScreen() {
 
   // ステージクリックハンドラー
   const handleStageClick = (e) => {
-    // If a gif is selected, place it
     if (selectedGif) {
       const stage = e.target.getStage();
       const pointer = stage.getPointerPosition();
@@ -79,23 +78,6 @@ function FrameMotionScreen() {
     handleDown(e);
   };
 
-  // 選択されたスタンプを削除
-  const deleteSelectedStamp = () => {
-    if (!selectedStampId) return;
-    setStamps(prev => prev.filter(s => s.id !== selectedStampId));
-    setSelectedStampId(null);
-  };
-
-  // Deleteキーで削除
-  useEffect(() => {
-    const onKey = (ev) => {
-      if (ev.key === "Delete" || ev.key === "Backspace") {
-        deleteSelectedStamp();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [selectedStampId, stamps]);
 
   return (
     <div className="frame-container">
@@ -109,7 +91,7 @@ function FrameMotionScreen() {
         color: "#666"
       }}>
         <strong>使い方:</strong> アニメーションGIFを選択してから、ステージ上の任意の位置をクリックして配置してください。<br/>
-        {selectedGif && <span style={{ color: "#ff6b6b" }}>選択中: {selectedGif.name}</span>}
+        {/* {selectedGif && <span style={{ color: "#ff6b6b" }}>選択中: {selectedGif.name}</span>} */}
       </div>
 
       <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
@@ -130,15 +112,6 @@ function FrameMotionScreen() {
             onClick={() => handleGifSelect(gif)}
           />
         ))}
-        {/* optional delete button */}
-        {selectedStampId && (
-          <button
-            style={{ marginLeft: 12, padding: "8px 12px" }}
-            onClick={deleteSelectedStamp}
-          >
-            Delete selected stamp
-          </button>
-        )}
       </div>
 
       <Stage
