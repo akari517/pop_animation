@@ -17,11 +17,11 @@ import pointer from "../../assets/pointer.gif";
 // 定数
 const STAMP_DEFAULT_SIZE = 100;
 const GIF_ASSETS = [
-  { src: book_flip, name: "book_flip" },
-  { src: tree_wind, name: "tree_wind" },
-  { src: pointer, name: "pointer" },
-  { src: heart_pulse, name: "heart_pulse" },
-  { src: star, name: "star" },
+  { src: book_flip, name: "book_flip", label: "本" },
+  { src: tree_wind, name: "tree_wind", label: "木" },
+  { src: pointer, name: "pointer", label: "ポインター" },
+  { src: heart_pulse, name: "heart_pulse", label: "ハート" },
+  { src: star, name: "star", label: "星" },
 ];
 
 function FrameMotionScreen() {
@@ -34,7 +34,6 @@ function FrameMotionScreen() {
 
   // GIF選択ハンドラー
   const handleGifSelect = useCallback((gif) => {
-    console.log("GIF選択:", gif.name);
     setSelectedGif(gif);
     setSelectedStampId(null);
   }, []);
@@ -51,7 +50,6 @@ function FrameMotionScreen() {
       height: STAMP_DEFAULT_SIZE,
     };
 
-    console.log("新しいスタンプ追加:", newStamp);
     setStamps(prev => [...prev, newStamp]);
   }, []);
 
@@ -62,28 +60,27 @@ function FrameMotionScreen() {
 
   // ステージクリックハンドラー
   const handleStageClick = useCallback((e) => {
-    // GIF選択中の場合、スタンプを配置
     if (selectedGif) {
       const stage = e.target.getStage();
       const pointer = stage.getPointerPosition();
-
-      console.log("ステージクリック - 選択中:", selectedGif.name, "位置:", pointer);
-
       addStamp(selectedGif, pointer);
-      setSelectedGif(null); // 配置後は選択解除
+      setSelectedGif(null);
       return;
     }
 
-    // 空のステージをクリック → スタンプ選択解除
     setSelectedStampId(null);
-
-    // 通常の描画処理
     handleDown(e);
   }, [selectedGif, addStamp, handleDown]);
 
   // Undo: 最後に追加したスタンプを削除
   const undoLastStamp = useCallback(() => {
     setStamps(prev => (prev.length > 0 ? prev.slice(0, -1) : prev));
+    setSelectedStampId(null);
+  }, []);
+
+  // 全削除
+  const clearAllStamps = useCallback(() => {
+    setStamps([]);
     setSelectedStampId(null);
   }, []);
 
@@ -102,95 +99,212 @@ function FrameMotionScreen() {
   }, [undoLastStamp]);
 
   return (
-    <div className="frame-container">
-      {/* 使用方法の説明 */}
-      <InstructionBanner />
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      padding: "20px",
+    }}>
+      <div style={{
+        maxWidth: "1400px",
+        margin: "0 auto",
+        background: "rgba(255, 255, 255, 0.95)",
+        borderRadius: "20px",
+        padding: "24px",
+        boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+      }}>
+        {/* ヘッダー */}
+        <Header />
 
-      {/* GIF選択パネル */}
-      <GifSelectionPanel
-        gifs={GIF_ASSETS}
-        selectedGif={selectedGif}
-        onGifSelect={handleGifSelect}
-        onUndo={undoLastStamp}
-        canUndo={stamps.length > 0}
-      />
+        {/* 使用方法の説明 */}
+        <InstructionBanner selectedGif={selectedGif} />
 
-      {/* キャンバス */}
-      <Stage
-        width={stageSize.width}
-        height={stageSize.height}
-        onMouseDown={handleStageClick}
-        onMouseMove={handleMove}
-        onMouseUp={endDrawing}
-        onTouchStart={handleStageClick}
-        onTouchMove={handleMove}
-        onTouchEnd={endDrawing}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => e.preventDefault()}
-        style={{ cursor: selectedGif ? "crosshair" : "default" }}
-      >
-        {/* 背景画像レイヤー */}
-        <Layer>
-          <URLImage
-            src={image2}
-            stageWidth={stageSize.width}
-            stageHeight={stageSize.height}
-          />
-        </Layer>
+        {/* GIF選択パネル */}
+        <GifSelectionPanel
+          gifs={GIF_ASSETS}
+          selectedGif={selectedGif}
+          onGifSelect={handleGifSelect}
+          onUndo={undoLastStamp}
+          onClear={clearAllStamps}
+          canUndo={stamps.length > 0}
+        />
 
-        {/* スタンプレイヤー */}
-        <Layer>
-          {stamps.map((stamp) => (
-            <StampImage
-              key={stamp.id}
-              id={stamp.id}
-              src={stamp.src}
-              x={stamp.x}
-              y={stamp.y}
-              width={stamp.width}
-              height={stamp.height}
-              isSelected={selectedStampId === stamp.id}
-              onSelect={toggleStampSelection}
-            />
-          ))}
-        </Layer>
-      </Stage>
+        {/* キャンバス */}
+        <div style={{
+          marginTop: "20px",
+          borderRadius: "12px",
+          overflow: "hidden",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+          border: "3px solid #e0e0e0",
+        }}>
+          <Stage
+            width={stageSize.width}
+            height={stageSize.height}
+            onMouseDown={handleStageClick}
+            onMouseMove={handleMove}
+            onMouseUp={endDrawing}
+            onTouchStart={handleStageClick}
+            onTouchMove={handleMove}
+            onTouchEnd={endDrawing}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => e.preventDefault()}
+            style={{ 
+              cursor: selectedGif ? "crosshair" : "default",
+              display: "block",
+            }}
+          >
+            {/* 背景画像レイヤー */}
+            <Layer>
+              <URLImage
+                src={image2}
+                stageWidth={stageSize.width}
+                stageHeight={stageSize.height}
+              />
+            </Layer>
+
+            {/* スタンプレイヤー */}
+            <Layer>
+              {stamps.map((stamp) => (
+                <StampImage
+                  key={stamp.id}
+                  id={stamp.id}
+                  src={stamp.src}
+                  x={stamp.x}
+                  y={stamp.y}
+                  width={stamp.width}
+                  height={stamp.height}
+                  isSelected={selectedStampId === stamp.id}
+                  onSelect={toggleStampSelection}
+                />
+              ))}
+            </Layer>
+          </Stage>
+        </div>
+
+        {/* ステータスバー */}
+        <StatusBar stampCount={stamps.length} />
+      </div>
+    </div>
+  );
+}
+
+// ヘッダーコンポーネント
+function Header() {
+  return (
+    <div style={{
+      marginBottom: "20px",
+      textAlign: "center",
+    }}>
+      <h1 style={{
+        fontSize: "32px",
+        fontWeight: "700",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        margin: "0 0 8px 0",
+      }}>
+        ✨ アニメーションスタンプエディター
+      </h1>
+      <p style={{
+        fontSize: "14px",
+        color: "#666",
+        margin: 0,
+      }}>
+        お気に入りのGIFスタンプを選んで、画像をデコレーションしよう！
+      </p>
     </div>
   );
 }
 
 // 使用方法バナーコンポーネント
-function InstructionBanner() {
+function InstructionBanner({ selectedGif }) {
   return (
-    <div
-      style={{
-        backgroundColor: "#f0f0f0",
-        padding: "10px",
-        marginBottom: "10px",
-        borderRadius: "5px",
-        fontSize: "14px",
-        color: "#666",
-      }}
-    >
-      <strong>使い方:</strong> アニメーションGIFを選択してから、ステージ上の任意の位置をクリックして配置してください。
+    <div style={{
+      background: selectedGif 
+        ? "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+        : "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+      padding: "16px 20px",
+      marginBottom: "20px",
+      borderRadius: "12px",
+      fontSize: "15px",
+      color: "#fff",
+      fontWeight: "500",
+      display: "flex",
+      alignItems: "center",
+      gap: "12px",
+      transition: "all 0.3s ease",
+      boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
+    }}>
+      <span style={{ fontSize: "24px" }}>
+        {selectedGif ? "🎯" : "💡"}
+      </span>
+      <div>
+        {selectedGif ? (
+          <>
+            <strong>{selectedGif.label}</strong> を選択中！キャンバスをクリックして配置してください
+          </>
+        ) : (
+          <>
+            <strong>使い方:</strong> 下のGIFスタンプを選択してから、キャンバス上をクリックして配置
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
 // GIF選択パネルコンポーネント
-function GifSelectionPanel({ gifs, selectedGif, onGifSelect, onUndo, canUndo }) {
+function GifSelectionPanel({ gifs, selectedGif, onGifSelect, onUndo, onClear, canUndo }) {
   return (
-    <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
-      {gifs.map((gif) => (
-        <GifThumbnail
-          key={gif.name}
-          gif={gif}
-          isSelected={selectedGif?.name === gif.name}
-          onSelect={onGifSelect}
-        />
-      ))}
+    <div style={{
+      background: "#f8f9fa",
+      padding: "20px",
+      borderRadius: "12px",
+      border: "2px solid #e9ecef",
+    }}>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: "16px",
+      }}>
+        {/* GIFサムネイル */}
+        <div style={{
+          display: "flex",
+          gap: "12px",
+          flexWrap: "wrap",
+        }}>
+          {gifs.map((gif) => (
+            <GifThumbnail
+              key={gif.name}
+              gif={gif}
+              isSelected={selectedGif?.name === gif.name}
+              onSelect={onGifSelect}
+            />
+          ))}
+        </div>
 
-      <UndoButton onClick={onUndo} disabled={!canUndo} />
+        {/* コントロールボタン */}
+        <div style={{
+          display: "flex",
+          gap: "10px",
+        }}>
+          <ActionButton
+            onClick={onUndo}
+            disabled={!canUndo}
+            icon="↶"
+            label="元に戻す"
+            hotkey="Ctrl+Z"
+          />
+          <ActionButton
+            onClick={onClear}
+            disabled={!canUndo}
+            icon="🗑️"
+            label="全削除"
+            variant="danger"
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -198,38 +312,137 @@ function GifSelectionPanel({ gifs, selectedGif, onGifSelect, onUndo, canUndo }) 
 // GIFサムネイルコンポーネント
 function GifThumbnail({ gif, isSelected, onSelect }) {
   return (
-    <img
-      src={gif.src}
-      alt={gif.name}
-      style={{
-        width: "100px",
-        height: "100px",
-        margin: "5px",
-        cursor: isSelected ? "pointer" : "grab",
-        border: isSelected ? "3px solid #ff6b6b" : "2px solid #ccc",
-        borderRadius: "8px",
-        opacity: isSelected ? 1 : 0.8,
-      }}
+    <div
       onClick={() => onSelect(gif)}
-    />
+      style={{
+        position: "relative",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        transform: isSelected ? "scale(1.05)" : "scale(1)",
+      }}
+    >
+      <div style={{
+        width: "90px",
+        height: "90px",
+        borderRadius: "12px",
+        overflow: "hidden",
+        border: isSelected ? "3px solid #667eea" : "3px solid #dee2e6",
+        boxShadow: isSelected 
+          ? "0 8px 24px rgba(102, 126, 234, 0.4)"
+          : "0 2px 8px rgba(0, 0, 0, 0.1)",
+        background: "#fff",
+        transition: "all 0.2s ease",
+      }}>
+        <img
+          src={gif.src}
+          alt={gif.label}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+      </div>
+      <div style={{
+        marginTop: "6px",
+        textAlign: "center",
+        fontSize: "12px",
+        fontWeight: isSelected ? "600" : "500",
+        color: isSelected ? "#667eea" : "#495057",
+      }}>
+        {gif.label}
+      </div>
+    </div>
   );
 }
 
-// Undoボタンコンポーネント
-function UndoButton({ onClick, disabled }) {
+// アクションボタンコンポーネント
+function ActionButton({ onClick, disabled, icon, label, hotkey, variant = "primary" }) {
+  const colors = {
+    primary: {
+      bg: "#667eea",
+      bgHover: "#5568d3",
+      bgDisabled: "#cbd5e0",
+    },
+    danger: {
+      bg: "#f56565",
+      bgHover: "#e53e3e",
+      bgDisabled: "#cbd5e0",
+    },
+  };
+
+  const color = colors[variant];
+
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       style={{
-        marginLeft: 12,
-        padding: "8px 12px",
+        background: disabled ? color.bgDisabled : color.bg,
+        color: "#fff",
+        border: "none",
+        padding: "10px 18px",
+        borderRadius: "8px",
+        fontSize: "14px",
+        fontWeight: "600",
         cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.6 : 1,
+        transition: "all 0.2s ease",
+        boxShadow: disabled ? "none" : "0 2px 8px rgba(0, 0, 0, 0.15)",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled) {
+          e.target.style.background = color.bgHover;
+          e.target.style.transform = "translateY(-1px)";
+          e.target.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.2)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!disabled) {
+          e.target.style.background = color.bg;
+          e.target.style.transform = "translateY(0)";
+          e.target.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.15)";
+        }
       }}
     >
-      Undo
+      <span style={{ fontSize: "16px" }}>{icon}</span>
+      <span>{label}</span>
+      {hotkey && !disabled && (
+        <span style={{
+          fontSize: "11px",
+          opacity: 0.8,
+          marginLeft: "4px",
+        }}>
+          ({hotkey})
+        </span>
+      )}
     </button>
+  );
+}
+
+// ステータスバーコンポーネント
+function StatusBar({ stampCount }) {
+  return (
+    <div style={{
+      marginTop: "16px",
+      padding: "12px 16px",
+      background: "#f8f9fa",
+      borderRadius: "8px",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      fontSize: "13px",
+      color: "#6c757d",
+    }}>
+      <div>
+        📍 配置済みスタンプ: <strong style={{ color: "#495057" }}>{stampCount}個</strong>
+      </div>
+      <div style={{ opacity: 0.7 }}>
+        💾 自動保存機能は未実装です
+      </div>
+    </div>
   );
 }
 
