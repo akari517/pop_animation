@@ -27,36 +27,36 @@ import AnimationMenu from "../components/AnimationMenu";
 const isAuthenticated = false;
 export const router = createBrowserRouter([
   //認証関係スクリーン
-  { path: "/auth", element: <AuthScreen/> },
-  { path: "/login", element:<LoginScreen/> },
+  { path: "/auth", element: <AuthScreen /> },
+  { path: "/login", element: <LoginScreen /> },
 
   //mainスクリーン
   {
     path: "/", //親ルート
     Component: Layout,
     children: [
-      { index: true, element: <ViewingScreen/> }, // "/" にアクセス → ViewingPage
-      { path: "home", element: <ViewingScreen/> },
-      { path: "post", element: <PostScreen/> },
-      { path: "favorites", element: <FavoritesScreen/> },
-      { path: "mypage", element: <MyPageScreen/> },
+      { index: true, element: <ViewingScreen /> }, // "/" にアクセス → ViewingPage
+      { path: "home", element: <ViewingScreen /> },
+      { path: "post", element: <PostScreen /> },
+      { path: "favorites", element: <FavoritesScreen /> },
+      { path: "mypage", element: <MyPageScreen /> },
 
       // animationのルート定義をchildrenの中に移動
       {
         path: "animation",
-        element: <AnimationHomeScreen/>,
+        element: <AnimationHomeScreen />,
         children: [
-          { index: true, element: <AnimationMenu/> },
-          { path: "sketch", element: <SketchScreen/> },
-          { path: "stamp", element: <StampScreen/> },
-          { path: "frameMotion", element: <FrameMotionScreen/> },
-          { path: "effect", element: <EffectScreen/> },
-          { path: "frame", element: <FrameScreen/> },
+          { index: true, element: <AnimationMenu /> },
+          { path: "sketch", element: <SketchScreen /> },
+          { path: "stamp", element: <StampScreen /> },
+          { path: "motion", element: <FrameMotionScreen /> },
+          { path: "effect", element: <EffectScreen /> },
+          { path: "frame", element: <FrameScreen /> },
         ],
       },
     ],
   },
 
   // 未定義のルートは "/" にリダイレクト
- { path: "*", element: <Navigate to="/" /> },
+  { path: "*", element: <Navigate to="/" /> },
 ]);
