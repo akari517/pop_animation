@@ -27,7 +27,7 @@ const colors = [
 const SketchScreen = () => {
   const isDrawing = useRef(false);
   const [tool, setTool] = useState("pen");
-  const [color, setColor] = useState("#ff69b4");
+  const [color, setColor] = useState("#ffb6c1");
   const [shapes, setShapes] = useState([]);
   const history = useRef([[]]);
   const historyStep = useRef(0);
@@ -96,7 +96,7 @@ const SketchScreen = () => {
       height="100vh"
       display="flex"
       flexDirection="column"
-      bgcolor="#fefaff"
+      bgcolor="#fcfffdff"
       sx={{ overflow: "hidden", position: "relative" }}
     >
       {/* キャンバス部分 */}
@@ -213,7 +213,7 @@ const SketchScreen = () => {
           width: "100%",
           height: `${toolbarHeight}px`,
           background: "white",
-          borderTop: "2px solid #ffe4ec",
+          borderTop: "2px solid #D6F4DE",
           boxShadow: "0 -2px 10px rgba(255,182,193,0.2)",
           borderRadius: "20px 20px 0 0",
           p: 2,
@@ -231,9 +231,9 @@ const SketchScreen = () => {
               sx={{
                 minWidth: 80,
                 borderRadius: "16px",
-                backgroundColor: tool === p.value ? "#ffe4f2" : "white",
-                color: tool === p.value ? "#d63384" : "#555",
-                boxShadow: tool === p.value ? "0 0 6px #ffb6c1" : "none",
+                backgroundColor: tool === p.value ? "#D6F4DE" : "white",
+                color: tool === p.value ? "#2b5f39ff" : "#555",
+                //boxShadow: tool === p.value ? "0 0 6px #ffb6c1" : "none",
               }}
             >
               <span style={{ fontSize: "20px", marginRight: "6px" }}>{p.emoji}</span>
@@ -254,8 +254,9 @@ const SketchScreen = () => {
                 borderRadius: "50%",
                 backgroundColor: c,
                 cursor: "pointer",
-                border: color === c ? "3px solid #ff69b4" : "2px solid white",
-                boxShadow: color === c ? "0 0 8px #ff99cc" : "0 0 4px #ddd",
+
+                border: color === c ? "3px solid #17f051ff" : "2px solid white",
+                boxShadow: color === c ? "0 0 8px #90eea9ff" : "0 0 4px #ddd",
                 transition: "0.2s",
               }}
             />

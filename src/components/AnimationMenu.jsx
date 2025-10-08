@@ -24,7 +24,7 @@ function AnimationMenu() {
           to={item.path}
           style={{
             ...styles.link,
-            color: location.pathname.includes(item.path) ? "#ff80aa" : "#fff",
+            color: location.pathname.includes(item.path) ? "#4CAF50" : "#fff",
           }}
         >
           <div style={styles.icon}>{item.icon}</div>
