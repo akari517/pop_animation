@@ -1,19 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
-
-import HomeIcon from "@mui/icons-material/Home";
-import PersonIcon from "@mui/icons-material/Person";
-import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
-import AddIcon from "@mui/icons-material/Add";
-import { RouterProvider } from "react-router-dom";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
 import { Box, Button } from "@mui/material";
-import { Outlet } from 'react-router-dom';
+import { Outlet } from "react-router-dom";
 import AnimationMenu from "../../components/AnimationMenu";
 
 function AnimationHomeScreen() {
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // 画像選択時
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -22,7 +14,6 @@ function AnimationHomeScreen() {
     }
   };
 
-  // 編集完了ボタン押下時
   const handleComplete = () => {
     if (!selectedImage) {
       alert("画像を選択してください");
@@ -35,7 +26,6 @@ function AnimationHomeScreen() {
     <div className="screen-container">
       <h1>アニメーション画面</h1>
 
-      {/* 見出しの下で左右端にボタン配置 */}
       <Box
         sx={{
           display: "flex",
@@ -65,7 +55,7 @@ function AnimationHomeScreen() {
         </Button>
       </Box>
 
-      {/* 選択画像プレビュー */}
+      {/* 選択画像プレビュー
       {selectedImage && (
         <Box mb={2} textAlign="center">
           <img
@@ -74,10 +64,11 @@ function AnimationHomeScreen() {
             style={{ maxWidth: "100%", maxHeight: "300px" }}
           />
         </Box>
-      )}
+      )} */}
 
-      {/* 既存の Outlet と AnimationMenu */}
-      <Outlet />
+      {/* Outlet に context で selectedImage と setSelectedImage を渡す */}
+      <Outlet context={{ selectedImage, setSelectedImage }} />
+
       <AnimationMenu />
     </div>
   );

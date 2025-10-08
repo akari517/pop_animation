@@ -2,19 +2,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Stage, Layer, Line, Circle } from "react-konva";
 import { Box, Button, useMediaQuery } from "@mui/material";
-import image2 from "../../assets/image4.jpg";
+import { useOutletContext } from "react-router-dom";
 import { getLineProps } from "./PenTools";
 import URLImage from "../../components/URLImage.jsx";
 import { useStageSize } from "../../components/useStageSize.jsx";
-//a
+
 const penTypes = [
   { value: "pen", label: "ノーマル", emoji: "✏️" },
   { value: "neon", label: "ネオン", emoji: "🌈" },
   { value: "glitter", label: "キラキラ", emoji: "✨" },
-  { value: "transparent", label: "透明", emoji: "💧" },
-  { value: "circle", label: "丸", emoji: "⭕" },
-  { value: "balloon", label: "風船", emoji: "🎈" },
-  { value: "jellyfish", label: "クラゲ", emoji: "🪼" },
   { value: "eraser", label: "消しゴム", emoji: "🩹" },
 ];
 
@@ -25,6 +21,8 @@ const colors = [
 ];
 
 const SketchScreen = () => {
+  const { selectedImage, setSelectedImage } = useOutletContext();
+  const stageRef = useRef(null);
   const isDrawing = useRef(false);
   const [tool, setTool] = useState("pen");
   const [color, setColor] = useState("#ffb6c1");
@@ -32,15 +30,14 @@ const SketchScreen = () => {
   const history = useRef([[]]);
   const historyStep = useRef(0);
   const stageSize = useStageSize();
-
   const isMobile = useMediaQuery("(max-width: 600px)");
   const toolbarHeight = isMobile ? 240 : 180;
 
-  // --- 描画ロジック ---
   const startDrawing = (pos) => {
     isDrawing.current = true;
     setShapes((prev) => [...prev, { points: [pos.x, pos.y], color, tool }]);
   };
+
   const drawMove = (pos) => {
     if (!isDrawing.current) return;
     setShapes((prev) => {
@@ -52,6 +49,7 @@ const SketchScreen = () => {
       ];
     });
   };
+
   const endDrawing = () => {
     if (!isDrawing.current) return;
     isDrawing.current = false;
@@ -61,21 +59,32 @@ const SketchScreen = () => {
     historyStep.current = newHistory.length - 1;
     setShapes([...shapes]);
   };
+
   const handleUndo = () => {
     if (historyStep.current === 0) return;
     historyStep.current -= 1;
     setShapes(history.current[historyStep.current]);
   };
+
   const handleRedo = () => {
     if (historyStep.current === history.current.length - 1) return;
     historyStep.current += 1;
     setShapes(history.current[historyStep.current]);
   };
+
   const handleClear = () => {
     setShapes([]);
     history.current = [[]];
     historyStep.current = 0;
   };
+
+  const handleSave = () => {
+    if (!stageRef.current) return;
+    const uri = stageRef.current.toDataURL();
+    setSelectedImage(uri);
+    alert("編集済み画像を保存しました！");
+  };
+
   const getPointerPos = (e) => e.target.getStage().getPointerPosition();
   const handleDown = (e) => startDrawing(getPointerPos(e));
   const handleMove = (e) => drawMove(getPointerPos(e));
@@ -110,6 +119,7 @@ const SketchScreen = () => {
         }}
       >
         <Stage
+          ref={stageRef}
           width={stageSize.width}
           height={stageSize.height - toolbarHeight}
           onMouseDown={handleDown}
@@ -121,83 +131,21 @@ const SketchScreen = () => {
         >
           {/* 背景画像 */}
           <Layer>
-            <URLImage
-              src={image2}
-              stageWidth={stageSize.width}
-              stageHeight={stageSize.height - toolbarHeight}
-            />
+            {selectedImage ? (
+              <URLImage
+                src={selectedImage}
+                stageWidth={stageSize.width}
+                stageHeight={stageSize.height - toolbarHeight}
+              />
+            ) : (
+              <Box>画像を選択してください</Box>
+            )}
           </Layer>
 
           {/* 描画レイヤー */}
           <Layer>
             {shapes.map((shape, i) => {
               const props = getLineProps(shape);
-
-              // 🎈 風船ペン
-              if (shape.tool === "balloon" || props.balloon) {
-                return shape.points.reduce((arr, _, idx) => {
-                  if (idx % 2 === 0) {
-                    const radius = 6 + Math.random() * 6;
-                    arr.push(
-                      <Circle
-                        key={`balloon-${i}-${idx}`}
-                        x={shape.points[idx]}
-                        y={shape.points[idx + 1]}
-                        radius={radius}
-                        fill={props.fill || shape.color}
-                        shadowBlur={props.shadowBlur || 8}
-                        shadowColor={props.shadowColor || "#fff"}
-                        opacity={props.opacity || 0.8}
-                      />
-                    );
-                  }
-                  return arr;
-                }, []);
-              }
-
-              // ✨ glitter ペン
-              if (shape.tool === "glitter") {
-                return (
-                  <React.Fragment key={i}>
-                    <Line {...props} />
-                    {shape.points.reduce((arr, _, idx) => {
-                      if (idx % 2 === 0) {
-                        arr.push(
-                          <Circle
-                            key={`g-${i}-${idx}`}
-                            x={shape.points[idx]}
-                            y={shape.points[idx + 1]}
-                            radius={Math.random() * 2 + 1}
-                            fill="#fffacd"
-                            opacity={Math.random()}
-                          />
-                        );
-                      }
-                      return arr;
-                    }, [])}
-                  </React.Fragment>
-                );
-              }
-
-              // 🌈 ネオンペン
-              if (shape.tool === "neon") {
-                return (
-                  <React.Fragment key={i}>
-                    <Line
-                      points={shape.points}
-                      stroke={shape.color}
-                      strokeWidth={12}
-                      lineCap="round"
-                      lineJoin="round"
-                      tension={0.5}
-                      opacity={0.4}
-                    />
-                    <Line {...props} />
-                  </React.Fragment>
-                );
-              }
-
-              // 🖊 通常ペン系
               return <Line key={i} {...props} />;
             })}
           </Layer>
@@ -233,7 +181,6 @@ const SketchScreen = () => {
                 borderRadius: "16px",
                 backgroundColor: tool === p.value ? "#D6F4DE" : "white",
                 color: tool === p.value ? "#2b5f39ff" : "#555",
-                //boxShadow: tool === p.value ? "0 0 6px #ffb6c1" : "none",
               }}
             >
               <span style={{ fontSize: "20px", marginRight: "6px" }}>{p.emoji}</span>
@@ -254,7 +201,6 @@ const SketchScreen = () => {
                 borderRadius: "50%",
                 backgroundColor: c,
                 cursor: "pointer",
-
                 border: color === c ? "3px solid #17f051ff" : "2px solid white",
                 boxShadow: color === c ? "0 0 8px #90eea9ff" : "0 0 4px #ddd",
                 transition: "0.2s",
@@ -268,6 +214,7 @@ const SketchScreen = () => {
           <Button onClick={handleUndo} size="small" sx={{ borderRadius: "12px" }}>↩️ Undo</Button>
           <Button onClick={handleRedo} size="small" sx={{ borderRadius: "12px" }}>↪️ Redo</Button>
           <Button onClick={handleClear} color="error" variant="contained" size="small" sx={{ borderRadius: "12px" }}>🧼 Clear</Button>
+          <Button onClick={handleSave} color="primary" variant="contained" size="small" sx={{ borderRadius: "12px" }}>💾 保存</Button>
         </Box>
       </Box>
     </Box>
