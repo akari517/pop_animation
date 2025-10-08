@@ -15,6 +15,7 @@ function AnimationHomeScreen() {
     <div className="screen-container">
       <h1>アニメーション画面</h1>
       <Outlet />
+      <AnimationMenu />
     </div>
   );
 }
