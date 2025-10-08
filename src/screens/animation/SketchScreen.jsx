@@ -6,7 +6,7 @@ import image2 from "../../assets/image4.jpg";
 import { getLineProps } from "./PenTools";
 import URLImage from "../../components/URLImage.jsx";
 import { useStageSize } from "../../components/useStageSize.jsx";
-
+//a
 const penTypes = [
   { value: "pen", label: "ノーマル", emoji: "✏️" },
   { value: "neon", label: "ネオン", emoji: "🌈" },
