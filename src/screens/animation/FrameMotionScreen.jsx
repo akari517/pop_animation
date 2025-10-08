@@ -1,85 +1,88 @@
 import React, { useState, useEffect } from "react";
-import { Stage, Layer, Line } from "react-konva";
-import "./FrameMotionScreen.css";
+import { Stage, Layer, Line, Image as KonvaImage } from "react-konva";
+import useImage from "use-image";
 import image2 from "../../assets/image4.jpg";
-import URLImage from "../../components/URLImage.jsx";
 import { useStageSize } from "../../components/useStageSize.jsx";
 import { useDrawing } from "../../components/useDrawing";
 
 function FrameMotionScreen() {
   const stageSize = useStageSize();
   const [tick, setTick] = useState(0);
-  const [activeAnimation, setActiveAnimation] = useState(null); // null, "wave", "pulse", "fade"
+  const [activeAnimation, setActiveAnimation] = useState(null); // "bounce" | "wave" | "pulse"
+  const [bg] = useImage(image2);
+  const { shapes, handleDown, handleMove, endDrawing } = useDrawing([], "#0ff", "pen");
 
-  const {
-    shapes,
-    color,
-    setColor,
-    tool,
-    setTool,
-    handleDown,
-    handleMove,
-    endDrawing,
-    undo,
-    redo,
-    clear
-  } = useDrawing([], "#0ff", "pen");
-
-  // tickを更新してアニメーション制御
+  // ⏱️ アニメーションループ
   useEffect(() => {
     if (!activeAnimation) return;
     let animationId;
     const animate = () => {
-      setTick(t => t + 1);
+      setTick((t) => t + 0.05); // やや緩やかに
       animationId = requestAnimationFrame(animate);
     };
     animate();
     return () => cancelAnimationFrame(animationId);
   }, [activeAnimation]);
 
-  // 各アニメーションで位置やスケール・透明度を変える関数
-  const getAnimationProps = (idx) => {
+  // 🎞️ 各アニメーションの動作定義
+  const getAnimProps = (idx) => {
     switch (activeAnimation) {
-      case "wave":
-        return {
-          x: Math.sin(tick / (20 + idx * 5)) * (5 + idx),
-          y: Math.cos(tick / (25 + idx * 5)) * (5 + idx),
-          scaleX: 1,
-          scaleY: 1,
-          opacity: 1
-        };
-      case "pulse":
-        const s = 1 + Math.sin(tick / (15 + idx * 5)) * 0.1;
-        return { x: 0, y: 0, scaleX: s, scaleY: s, opacity: 1 };
-      case "fade":
-        const o = 0.6 + Math.sin(tick / (30 + idx * 5)) * 0.4;
-        return { x: 0, y: 0, scaleX: 1, scaleY: 1, opacity: o };
+      case "bounce": {
+        const bounce = 1 + Math.sin(tick / (10 + idx * 2)) * 0.12;
+        const offsetY = Math.sin(tick / (8 + idx)) * 4;
+        return { scaleX: bounce, scaleY: bounce, y: offsetY };
+      }
+      case "wave": {
+        const offsetY = Math.sin(tick / (5 + idx)) * 10;
+        const offsetX = Math.cos(tick / (6 + idx)) * 3;
+        return { x: offsetX, y: offsetY };
+      }
+      case "pulse": {
+        const scale = 1 + Math.sin(tick / (7 + idx)) * 0.06;
+        const opacity = 0.9 + Math.sin(tick / (5 + idx)) * 0.1;
+        return { scaleX: scale, scaleY: scale, opacity };
+      }
       default:
-        return { x: 0, y: 0, scaleX: 1, scaleY: 1, opacity: 1 };
+        return {};
     }
   };
 
+  // 🧭 UI
+  const buttons = [
+    { key: "bounce", label: "バネ" },
+    { key: "wave", label: "波" },
+    { key: "pulse", label: "パルス" },
+  ];
+
   return (
-    <div className="frame-container">
-      {/* アニメーション切り替えボタン */}
-      <div className="anim-btns">
-        <button
-          onClick={() => setActiveAnimation(activeAnimation === "wave" ? null : "wave")}
-        >
-          揺れる
-        </button>
-        <button
-          onClick={() => setActiveAnimation(activeAnimation === "pulse" ? null : "pulse")}
-        >
-          ふわふわ
-        </button>
-        <button
-          onClick={() => setActiveAnimation(activeAnimation === "fade" ? null : "fade")}
-        >
-          透明度
-        </button>
+    <div className="frame-container" style={{ textAlign: "center", padding: 10 }}>
+      {/* 🎛 アニメーション切り替えボタン */}
+      <div style={{ marginBottom: 8 }}>
+        {buttons.map((btn) => (
+          <button
+            key={btn.key}
+            onClick={() =>
+              setActiveAnimation((prev) => (prev === btn.key ? null : btn.key))
+            }
+            style={{
+              margin: "0 5px",
+              padding: "6px 14px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+              fontWeight: "bold",
+              background:
+                activeAnimation === btn.key ? "#007bff" : "#e0e0e0",
+              color: activeAnimation === btn.key ? "#fff" : "#333",
+              transition: "0.2s",
+            }}
+          >
+            {btn.label}
+          </button>
+        ))}
       </div>
 
+      {/* 🖼 Konva ステージ */}
       <Stage
         width={stageSize.width}
         height={stageSize.height}
@@ -90,12 +93,18 @@ function FrameMotionScreen() {
         onTouchMove={handleMove}
         onTouchEnd={endDrawing}
       >
-        {/* 背景画像 */}
+        {/* 背景 */}
         <Layer>
-          <URLImage src={image2} stageWidth={stageSize.width} stageHeight={stageSize.height} />
+          {bg && (
+            <KonvaImage
+              image={bg}
+              width={stageSize.width}
+              height={stageSize.height}
+            />
+          )}
         </Layer>
 
-        {/* ペンで描いた線 */}
+        {/* 描いた線 */}
         <Layer>
           {shapes.map((line, i) => (
             <Line
@@ -110,24 +119,28 @@ function FrameMotionScreen() {
           ))}
         </Layer>
 
-        {/* 各線範囲のアニメーション */}
+        {/* ✨ Clip範囲内アニメーション */}
         {shapes.map((line, idx) => (
           <Layer
-            key={idx}
+            key={`anim-${idx}`}
             clipFunc={(ctx) => {
               if (line.points.length < 2) return;
               ctx.beginPath();
               const [x0, y0, ...rest] = line.points;
               ctx.moveTo(x0, y0);
-              for (let i = 0; i < rest.length; i += 2) ctx.lineTo(rest[i], rest[i + 1]);
+              for (let i = 0; i < rest.length; i += 2)
+                ctx.lineTo(rest[i], rest[i + 1]);
+              ctx.closePath();
             }}
           >
-            <URLImage
-              src={image2}
-              stageWidth={stageSize.width}
-              stageHeight={stageSize.height}
-              {...getAnimationProps(idx)}
-            />
+            {bg && (
+              <KonvaImage
+                image={bg}
+                width={stageSize.width}
+                height={stageSize.height}
+                {...getAnimProps(idx)}
+              />
+            )}
           </Layer>
         ))}
       </Stage>
