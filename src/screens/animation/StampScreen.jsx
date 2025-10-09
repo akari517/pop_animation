@@ -115,9 +115,6 @@ function FrameMotionScreen() {
         {/* ヘッダー */}
         <Header />
 
-        {/* 使用方法の説明 */}
-        <InstructionBanner selectedGif={selectedGif} />
-
         {/* GIF選択パネル */}
         <GifSelectionPanel
           gifs={GIF_ASSETS}
@@ -202,7 +199,7 @@ function Header() {
         WebkitTextFillColor: "transparent",
         margin: "0 0 8px 0",
       }}>
-        ✨ アニメーションスタンプエディター
+        スタンプ画面
       </h1>
       <p style={{
         fontSize: "14px",
@@ -215,42 +212,6 @@ function Header() {
   );
 }
 
-// 使用方法バナーコンポーネント
-function InstructionBanner({ selectedGif }) {
-  return (
-    <div style={{
-      background: selectedGif 
-        ? "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
-        : "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-      padding: "16px 20px",
-      marginBottom: "20px",
-      borderRadius: "12px",
-      fontSize: "15px",
-      color: "#fff",
-      fontWeight: "500",
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-      transition: "all 0.3s ease",
-      boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
-    }}>
-      <span style={{ fontSize: "24px" }}>
-        {selectedGif ? "🎯" : "💡"}
-      </span>
-      <div>
-        {selectedGif ? (
-          <>
-            <strong>{selectedGif.label}</strong> を選択中！キャンバスをクリックして配置してください
-          </>
-        ) : (
-          <>
-            <strong>使い方:</strong> 下のGIFスタンプを選択してから、キャンバス上をクリックして配置
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // GIF選択パネルコンポーネント
 function GifSelectionPanel({ gifs, selectedGif, onGifSelect, onUndo, onClear, canUndo }) {
@@ -436,12 +397,12 @@ function StatusBar({ stampCount }) {
       fontSize: "13px",
       color: "#6c757d",
     }}>
-      <div>
+      {/* <div>
         📍 配置済みスタンプ: <strong style={{ color: "#495057" }}>{stampCount}個</strong>
       </div>
       <div style={{ opacity: 0.7 }}>
         💾 自動保存機能は未実装です
-      </div>
+      </div> */}
     </div>
   );
 }
