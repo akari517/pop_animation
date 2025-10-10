@@ -8,14 +8,14 @@ import URLImage from "../../components/URLImage.jsx";
 import { useStageSize } from "../../components/useStageSize.jsx";
 //a
 const penTypes = [
-  { value: "pen", label: "ノーマル", emoji: "✏️" },
-  { value: "neon", label: "ネオン", emoji: "🌈" },
-  { value: "glitter", label: "キラキラ", emoji: "✨" },
-  { value: "transparent", label: "透明", emoji: "💧" },
-  { value: "circle", label: "丸", emoji: "⭕" },
-  { value: "balloon", label: "風船", emoji: "🎈" },
-  { value: "jellyfish", label: "クラゲ", emoji: "🪼" },
-  { value: "eraser", label: "消しゴム", emoji: "🩹" },
+  { value: "pen", label: "ノーマル" },
+  { value: "neon", label: "ネオン" },
+  { value: "glitter", label: "キラキラ" },
+  { value: "transparent", label: "透明" },
+  { value: "circle", label: "丸" },
+  { value: "balloon", label: "風船" },
+  { value: "jellyfish", label: "クラゲ" },
+  { value: "eraser", label: "消しゴム" },
 ];
 
 const colors = [
@@ -233,10 +233,18 @@ const SketchScreen = () => {
                 borderRadius: "16px",
                 backgroundColor: tool === p.value ? "#D6F4DE" : "white",
                 color: tool === p.value ? "#2b5f39ff" : "#555",
-                //boxShadow: tool === p.value ? "0 0 6px #ffb6c1" : "none",
               }}
             >
-              <span style={{ fontSize: "20px", marginRight: "6px" }}>{p.emoji}</span>
+              <Box sx={{ width: 56, height: 36, mr: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {p.value === "eraser" ? (
+                  <span style={{ fontSize: 20 }}>🩹</span>
+                ) : (
+                  <PenPreview
+                    tool={p.value}
+                    sampleColor={p.value === "eraser" ? "#ffffff" : color}
+                  />
+                )}
+              </Box>
               <span style={{ fontSize: "12px" }}>{p.label}</span>
             </Button>
           ))}
@@ -275,3 +283,77 @@ const SketchScreen = () => {
 };
 
 export default SketchScreen;
+
+// ---- 追加：ツール用の小さなプレビューコンポーネント ----
+const PenPreview = ({ tool, sampleColor = "#ffb6c1" }) => {
+  const samplePoints = [6, 28, 18, 10, 36, 26];
+  const shape = { points: samplePoints, color: sampleColor, tool };
+  const props = getLineProps(shape);
+
+  // glitter の小さな点群生成
+  const glitterDots = samplePoints.reduce((arr, _, idx) => {
+    if (idx % 2 === 0) {
+      arr.push(
+        <Circle
+          key={`g-${idx}`}
+          x={samplePoints[idx]}
+          y={samplePoints[idx + 1]}
+          radius={Math.random() * 1.5 + 0.7}
+          fill="#fffacd"
+          opacity={0.8}
+        />
+      );
+    }
+    return arr;
+  }, []);
+
+  // balloon 用の複数丸
+  const balloonDots = samplePoints.reduce((arr, _, idx) => {
+    if (idx % 2 === 0) {
+      const radius = 3 + Math.random() * 3;
+      arr.push(
+        <Circle
+          key={`b-${idx}`}
+          x={samplePoints[idx]}
+          y={samplePoints[idx + 1]}
+          radius={radius}
+          fill={props.fill || sampleColor}
+          shadowBlur={props.shadowBlur || 4}
+          shadowColor={props.shadowColor || "#fff"}
+          opacity={0.9}
+        />
+      );
+    }
+    return arr;
+  }, []);
+
+  return (
+    <Stage width={56} height={36} style={{ display: "block" }}>
+      <Layer>
+        {tool === "balloon" ? (
+          balloonDots
+        ) : tool === "glitter" ? (
+          <>
+            <Line {...props} />
+            {glitterDots}
+          </>
+        ) : tool === "neon" ? (
+          <>
+            <Line
+              points={samplePoints}
+              stroke={sampleColor}
+              strokeWidth={8}
+              lineCap="round"
+              lineJoin="round"
+              tension={0.5}
+              opacity={0.4}
+            />
+            <Line {...props} />
+          </>
+        ) : (
+          <Line {...props} />
+        )}
+      </Layer>
+    </Stage>
+  );
+};
