@@ -229,7 +229,7 @@ const SketchScreen = () => {
               onClick={() => setTool(p.value)}
               variant={tool === p.value ? "contained" : "outlined"}
               sx={{
-                minWidth: 92,
+                minWidth: 80,
                 borderRadius: "16px",
                 backgroundColor: tool === p.value ? "#D6F4DE" : "white",
                 color: tool === p.value ? "#2b5f39ff" : "#555",
