@@ -8,14 +8,14 @@ import URLImage from "../../components/URLImage.jsx";
 import { useStageSize } from "../../components/useStageSize.jsx";
 //a
 const penTypes = [
-  { value: "pen", label: "ノーマル", sampleColor: "#ffb6c1" },
-  { value: "neon", label: "ネオン", sampleColor: "#1e90ff" },
-  { value: "glitter", label: "キラキラ", sampleColor: "#fffacd" },
-  { value: "transparent", label: "透明", sampleColor: "#00ced1" },
-  { value: "circle", label: "丸", sampleColor: "#ff69b4" },
-  { value: "balloon", label: "風船", sampleColor: "#ffa500" },
-  { value: "jellyfish", label: "クラゲ", sampleColor: "#9370db" },
-  { value: "eraser", label: "消しゴム", sampleColor: "#ffffff" },
+  { value: "pen", label: "ノーマル" },
+  { value: "neon", label: "ネオン" },
+  { value: "glitter", label: "キラキラ" },
+  { value: "transparent", label: "透明" },
+  { value: "circle", label: "丸" },
+  { value: "balloon", label: "風船" },
+  { value: "jellyfish", label: "クラゲ" },
+  { value: "eraser", label: "消しゴム" },
 ];
 
 const colors = [
