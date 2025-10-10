@@ -1,16 +1,15 @@
-import React, { useState } from "react";
+import React, { useContext } from "react";
 import { Box, Button } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import AnimationMenu from "../../components/AnimationMenu";
-
+import { AnimationContext } from "../../context/AnimationContext";
 function AnimationHomeScreen() {
-  const [selectedImage, setSelectedImage] = useState(null);
+  const { selectedImage, setSelectedImageFromFile } = useContext(AnimationContext);
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-      const imageURL = URL.createObjectURL(file);
-      setSelectedImage(imageURL);
+      setSelectedImageFromFile(file);
     }
   };
 
@@ -55,7 +54,7 @@ function AnimationHomeScreen() {
         </Button>
       </Box>
 
-      {/* 選択画像プレビュー
+      {/* 選択画像のプレビュー
       {selectedImage && (
         <Box mb={2} textAlign="center">
           <img
@@ -66,8 +65,8 @@ function AnimationHomeScreen() {
         </Box>
       )} */}
 
-      {/* Outlet に context で selectedImage と setSelectedImage を渡す */}
-      <Outlet context={{ selectedImage, setSelectedImage }} />
+      {/* Outlet はコンテキストを直接利用するため追加の props は不要 */}
+      <Outlet />
 
       <AnimationMenu />
     </div>

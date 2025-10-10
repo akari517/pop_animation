@@ -1,32 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import "./Frames/FrameScreen.css";
 import { frames, FrameOverlay, FrameThumbnail } from "./Frames/FrameItems";
+import { AnimationContext } from "../../context/AnimationContext";
 
 function FrameScreen() {
-  const [activeFrame, setActiveFrame] = useState("none");
-  const [imageSrc, setImageSrc] = useState(null);
+  const { activeFrame, setActiveFrame, selectedImage, setSelectedImageFromFile, simpleFrameColor, setSimpleFrameColor } = useContext(AnimationContext);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
-  const [simpleFrameColor, setSimpleFrameColor] = useState("#ff0000");
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const fileInputRef = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      if (imageSrc && imageSrc.startsWith("blob:")) {
-        URL.revokeObjectURL(imageSrc);
-      }
-    };
-  }, [imageSrc]);
-
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (imageSrc && imageSrc.startsWith("blob:")) {
-        URL.revokeObjectURL(imageSrc);
-      }
-      setImageSrc(URL.createObjectURL(file));
-    }
-  };
 
   const handleImageLoad = (e) => {
     setImageSize({ width: e.target.naturalWidth, height: e.target.naturalHeight });
@@ -48,31 +28,17 @@ function FrameScreen() {
 
   return (
     <div className="app-container">
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        onChange={handleImageChange}
-        style={{ display: "none" }}
-      />
-
-      <header className="top-nav">
-        <button className="select-button" onClick={() => fileInputRef.current.click()}>
-          写真を選ぶ
-        </button>
-        <button className="done-button">編集完了</button>
-      </header>
+      {/* 親の AnimationHomeScreen で画像選択を行うため、input と header は削除 */}
 
       <main className="image-viewport">
-        {imageSrc ? (
-          //ふれーむ
+        {selectedImage ? (
           <div
             className="image-wrapper"
             style={{ width: imageSize.width, height: imageSize.height }}
             mr-100
           >
             <img
-              src={imageSrc}
+              src={selectedImage}
               alt="Editable"
               className="main-image"
               onLoad={handleImageLoad}
@@ -96,7 +62,6 @@ function FrameScreen() {
               </div>
             )}
 
-
           </div>
         ) : (
           <div className="placeholder-text">画像が選択されていません</div>
@@ -110,9 +75,9 @@ function FrameScreen() {
             onClick={() => handleFrameClick(frame.id)}
             className={`effect-thumbnail ${frame.id === activeFrame ? "active" : ""}`}
           >
-            {imageSrc ? (
+            {selectedImage ? (
               <div className="thumbnail-wrapper">
-                <img src={imageSrc} alt={frame.name} />
+                <img src={selectedImage} alt={frame.name} />
                 {FrameThumbnail[frame.id]?.()}
               </div>
             ) : (

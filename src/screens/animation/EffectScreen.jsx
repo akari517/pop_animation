@@ -1,58 +1,19 @@
 // src/components/MyPageScreen.jsx
-import React from "react";
-import { Link } from "react-router-dom";
-import { useState, useRef, useEffect } from 'react';
+import React, { useContext } from "react";
+import { AnimationContext } from "../../context/AnimationContext";
 import './Effects/EffectScreen.css';
 import { effects, OverlayEffects, OverlayThumbnail } from './Effects/EffectItems';
 
 function EffectScreen() {
-  const [activeEffect, setActiveEffect] = useState('none');
-  const [imageSrc, setImageSrc] = useState(null);
-  const fileInputRef = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      if (imageSrc && imageSrc.startsWith('blob:')) {
-        URL.revokeObjectURL(imageSrc);
-      }
-    };
-  }, [imageSrc]);
-
-  const currentFilter =
-    effects.find(effect => effect.id === activeEffect)?.filter || 'none';
-
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (imageSrc && imageSrc.startsWith('blob:')) {
-        URL.revokeObjectURL(imageSrc);
-      }
-      setImageSrc(URL.createObjectURL(file));
-    }
-  };
-
+  const { activeEffect, setActiveEffect, selectedImage } = useContext(AnimationContext);
+  const currentFilter = effects.find(effect => effect.id === activeEffect)?.filter || 'none';
   return (
     <div className="app-container">
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        onChange={handleImageChange}
-        style={{ display: 'none' }}
-      />
-
-      <header className="top-nav">
-        <button className="select-button" onClick={() => fileInputRef.current.click()}>
-          写真を選ぶ
-        </button>
-        <button className="done-button">編集完了</button>
-      </header>
-
       <main className="image-viewport">
-        {imageSrc ? (
+        {selectedImage ? (
           <div className="image-wrapper">
             <img
-              src={imageSrc}
+              src={selectedImage}
               alt="Editable"
               className="main-image"
               style={{ filter: currentFilter }}
@@ -72,8 +33,8 @@ function EffectScreen() {
             className={`effect-thumbnail ${effect.id === activeEffect ? 'active' : ''}`}
           >
             {effect.type === 'filter' ? (
-              imageSrc ? (
-                <img src={imageSrc} alt={effect.name} style={{ filter: effect.filter }} />
+              selectedImage ? (
+                <img src={selectedImage} alt={effect.name} style={{ filter: effect.filter }} />
               ) : (
                 <div className="thumbnail-placeholder">{effect.name}</div>
               )

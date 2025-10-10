@@ -1,5 +1,6 @@
 // SketchScreen.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
+import { AnimationContext } from "../../context/AnimationContext";
 import { Stage, Layer, Line, Circle } from "react-konva";
 import { Box, Button, useMediaQuery } from "@mui/material";
 import image2 from "../../assets/image4.jpg";
@@ -26,9 +27,10 @@ const colors = [
 
 const SketchScreen = () => {
   const isDrawing = useRef(false);
-  const [tool, setTool] = useState("pen");
-  const [color, setColor] = useState("#ffb6c1");
-  const [shapes, setShapes] = useState([]);
+  const { selectedImage, shapes: ctxShapes, setShapes: setCtxShapes, addShape, undo, redo, clearAll, tool: ctxTool, setTool: setCtxTool, color: ctxColor, setColor: setCtxColor } = useContext(AnimationContext);
+  const [toolLocal, setToolLocal] = useState(ctxTool || "pen");
+  const [colorLocal, setColorLocal] = useState(ctxColor || "#ffb6c1");
+  const [shapes, setShapes] = useState(ctxShapes || []);
   const history = useRef([[]]);
   const historyStep = useRef(0);
   const stageSize = useStageSize();
@@ -39,7 +41,7 @@ const SketchScreen = () => {
   // --- 描画ロジック ---
   const startDrawing = (pos) => {
     isDrawing.current = true;
-    setShapes((prev) => [...prev, { points: [pos.x, pos.y], color, tool }]);
+    setShapes((prev) => [...prev, { points: [pos.x, pos.y], color: colorLocal, tool: toolLocal }]);
   };
   const drawMove = (pos) => {
     if (!isDrawing.current) return;
@@ -60,21 +62,26 @@ const SketchScreen = () => {
     history.current = newHistory;
     historyStep.current = newHistory.length - 1;
     setShapes([...shapes]);
+    // Sync to global context
+    setCtxShapes([...shapes]);
   };
   const handleUndo = () => {
     if (historyStep.current === 0) return;
     historyStep.current -= 1;
     setShapes(history.current[historyStep.current]);
+    setCtxShapes(history.current[historyStep.current]);
   };
   const handleRedo = () => {
     if (historyStep.current === history.current.length - 1) return;
     historyStep.current += 1;
     setShapes(history.current[historyStep.current]);
+    setCtxShapes(history.current[historyStep.current]);
   };
   const handleClear = () => {
     setShapes([]);
     history.current = [[]];
     historyStep.current = 0;
+    setCtxShapes([]);
   };
   const getPointerPos = (e) => e.target.getStage().getPointerPosition();
   const handleDown = (e) => startDrawing(getPointerPos(e));
@@ -122,7 +129,7 @@ const SketchScreen = () => {
           {/* 背景画像 */}
           <Layer>
             <URLImage
-              src={image2}
+              src={selectedImage || image2}
               stageWidth={stageSize.width}
               stageHeight={stageSize.height - toolbarHeight}
             />
@@ -226,14 +233,16 @@ const SketchScreen = () => {
           {penTypes.map((p) => (
             <Button
               key={p.value}
-              onClick={() => setTool(p.value)}
-              variant={tool === p.value ? "contained" : "outlined"}
+              onClick={() => {
+                setToolLocal(p.value);
+                setCtxTool(p.value);
+              }}
+              variant={toolLocal === p.value ? "contained" : "outlined"}
               sx={{
                 minWidth: 80,
                 borderRadius: "16px",
-                backgroundColor: tool === p.value ? "#D6F4DE" : "white",
-                color: tool === p.value ? "#2b5f39ff" : "#555",
-                //boxShadow: tool === p.value ? "0 0 6px #ffb6c1" : "none",
+                backgroundColor: toolLocal === p.value ? "#D6F4DE" : "white",
+                color: toolLocal === p.value ? "#2b5f39ff" : "#555",
               }}
             >
               <span style={{ fontSize: "20px", marginRight: "6px" }}>{p.emoji}</span>
@@ -247,7 +256,10 @@ const SketchScreen = () => {
           {colors.map((c) => (
             <Box
               key={c}
-              onClick={() => setColor(c)}
+              onClick={() => {
+                setColorLocal(c);
+                setCtxColor(c);
+              }}
               sx={{
                 width: 28,
                 height: 28,
@@ -255,8 +267,8 @@ const SketchScreen = () => {
                 backgroundColor: c,
                 cursor: "pointer",
 
-                border: color === c ? "3px solid #17f051ff" : "2px solid white",
-                boxShadow: color === c ? "0 0 8px #90eea9ff" : "0 0 4px #ddd",
+                border: colorLocal === c ? "3px solid #17f051ff" : "2px solid white",
+                boxShadow: colorLocal === c ? "0 0 8px #90eea9ff" : "0 0 4px #ddd",
                 transition: "0.2s",
               }}
             />
