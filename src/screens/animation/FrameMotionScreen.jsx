@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { Stage, Layer, Line, Image as KonvaImage } from "react-konva";
 import useImage from "use-image";
 import image2 from "../../assets/image4.jpg";
+import { AnimationContext } from "../../context/AnimationContext";
 import { useStageSize } from "../../components/useStageSize.jsx";
 import { useDrawing } from "../../components/useDrawing";
 import { getAnimProps, animationList } from "./FrameMotionAnimation.js";
 
 function FrameMotionScreen() {
-  const stageSize = useStageSize();
-  const [bg] = useImage(image2);
+  const stageSize = useStageSize(70);
+  const { selectedImage } = useContext(AnimationContext);
+  const [bg] = useImage(selectedImage || image2);
   const { shapes, handleDown, handleMove, endDrawing, setShapes } = useDrawing([], "#0ff", "pen");
   const [selectedShape, setSelectedShape] = useState(null);
 

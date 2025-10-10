@@ -6,6 +6,7 @@ export const AnimationContext = createContext();
 export const AnimationProvider = ({ children }) => {
   const [selectedImage, setSelectedImage] = useState(null); // 選択画像
   const [shapes, setShapes] = useState([]); // Sketch / Stamp 用描画
+  const [stamps, setStamps] = useState([]); // GIF スタンプ配置
   const [activeEffect, setActiveEffect] = useState("none");
   const [tool, setTool] = useState("pen");
   const [color, setColor] = useState("#ffb6c1");
@@ -25,6 +26,17 @@ export const AnimationProvider = ({ children }) => {
     history.current = newHistory;
     historyStep.current = newHistory.length - 1;
   };
+
+  // スタンプ操作
+  const addStamp = (newStamp) => {
+    setStamps(prev => [...prev, newStamp]);
+  };
+
+  const undoStamp = () => {
+    setStamps(prev => (prev.length > 0 ? prev.slice(0, -1) : prev));
+  };
+
+  const clearStamps = () => setStamps([]);
 
   const undo = () => {
     if (historyStep.current === 0) return;
@@ -66,6 +78,11 @@ export const AnimationProvider = ({ children }) => {
         shapes,
         setShapes,
         addShape,
+        stamps,
+        setStamps,
+        addStamp,
+        undoStamp,
+        clearStamps,
         activeEffect,
         setActiveEffect,
         tool,

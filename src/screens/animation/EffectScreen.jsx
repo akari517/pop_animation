@@ -8,15 +8,15 @@ function EffectScreen() {
   const { activeEffect, setActiveEffect, selectedImage } = useContext(AnimationContext);
   const currentFilter = effects.find(effect => effect.id === activeEffect)?.filter || 'none';
   return (
-    <div className="app-container">
+    <div className="app-container" style={{ paddingBottom: 90 }}>
       <main className="image-viewport">
         {selectedImage ? (
           <div className="image-wrapper">
             <img
               src={selectedImage}
-              alt="Editable"
+              alt="選択された画像"
               className="main-image"
-              style={{ filter: currentFilter }}
+              style={{ filter: currentFilter, maxWidth: '100%', maxHeight: '100%' }}
             />
             {activeEffect !== 'none' && OverlayEffects[activeEffect]?.()}
           </div>

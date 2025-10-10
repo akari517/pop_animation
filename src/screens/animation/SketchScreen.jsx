@@ -33,10 +33,12 @@ const SketchScreen = () => {
   const [shapes, setShapes] = useState(ctxShapes || []);
   const history = useRef([[]]);
   const historyStep = useRef(0);
-  const stageSize = useStageSize();
+  const stageSize = useStageSize(70);
 
   const isMobile = useMediaQuery("(max-width: 600px)");
   const toolbarHeight = isMobile ? 240 : 180;
+
+  const contentHeight = Math.max(100, stageSize.height - toolbarHeight);
 
   // --- 描画ロジック ---
   const startDrawing = (pos) => {
@@ -109,16 +111,16 @@ const SketchScreen = () => {
       {/* キャンバス部分 */}
       <Box
         sx={{
-          height: `calc(100vh - ${toolbarHeight}px)`,
+          height: `${contentHeight}px`,
           display: "flex",
           justifyContent: "center",
-          alignItems: "center",
+          alignItems: "flex-start",
           position: "relative",
         }}
       >
         <Stage
           width={stageSize.width}
-          height={stageSize.height - toolbarHeight}
+          height={contentHeight}
           onMouseDown={handleDown}
           onMouseMove={handleMove}
           onMouseUp={endDrawing}
@@ -131,7 +133,7 @@ const SketchScreen = () => {
             <URLImage
               src={selectedImage || image2}
               stageWidth={stageSize.width}
-              stageHeight={stageSize.height - toolbarHeight}
+              stageHeight={contentHeight}
             />
           </Layer>
 
@@ -215,7 +217,7 @@ const SketchScreen = () => {
       <Box
         sx={{
           position: "fixed",
-          bottom: 0,
+          bottom: "70px", // move above the global bottom menu (AnimationMenu height)
           left: 0,
           width: "100%",
           height: `${toolbarHeight}px`,
@@ -224,7 +226,7 @@ const SketchScreen = () => {
           boxShadow: "0 -2px 10px rgba(255,182,193,0.2)",
           borderRadius: "20px 20px 0 0",
           p: 2,
-          zIndex: 10,
+          zIndex: 1100, // ensure it's above the bottom menu
           overflowY: "auto",
         }}
       >

@@ -27,7 +27,7 @@ function FrameScreen() {
   };
 
   return (
-    <div className="app-container">
+    <div className="app-container" style={{ paddingBottom: 90 }}>
       {/* 親の AnimationHomeScreen で画像選択を行うため、input と header は削除 */}
 
       <main className="image-viewport">
@@ -39,9 +39,10 @@ function FrameScreen() {
           >
             <img
               src={selectedImage}
-              alt="Editable"
+              alt="選択された画像"
               className="main-image"
               onLoad={handleImageLoad}
+              style={{ maxWidth: '100%', maxHeight: '100%' }}
             />
             {/* フレーム表示 */}
             {activeFrame === "simple"

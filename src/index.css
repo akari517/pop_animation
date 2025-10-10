@@ -8,7 +8,8 @@
   --primary-color: #4caf50;
   --background-color: #f0f0f7;
   --text-color: #333;
-  --nav-height: 60px; /* ナビゲーションバーの高さ */
+  --nav-height: 60px;
+  /* ナビゲーションバーの高さ */
 }
 
 body {
@@ -16,7 +17,8 @@ body {
   padding: 0;
   background-color: var(--background-color);
   color: var(--text-color);
-  overscroll-behavior: none; /* スワイプ時のブラウザの「戻る」機能を無効化 */
+  overscroll-behavior: none;
+  /* スワイプ時のブラウザの「戻る」機能を無効化 */
 }
 
 /* 全画面の共通コンテナスタイル */

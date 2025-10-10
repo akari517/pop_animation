@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import { Stage, Layer } from "react-konva";
 import "./FrameMotionScreen.css";
-import image2 from "../../assets/image4.jpg";
 import URLImage from "../../components/URLImage.jsx";
 import StampImage from "../../components/StampImage.jsx";
 import { useStageSize } from "../../components/useStageSize.jsx";
 import { useDrawing } from "../../components/useDrawing";
+import { AnimationContext } from "../../context/AnimationContext";
 
 // GIF assets
 import book_flip from "../../assets/book_flip.gif";
@@ -24,9 +24,10 @@ const GIF_ASSETS = [
   { src: star, name: "star", label: "星" },
 ];
 
-function FrameMotionScreen() {
-  const stageSize = useStageSize();
-  const [stamps, setStamps] = useState([]);
+function StampScreen() {
+  const stageSize = useStageSize(70);
+  const { selectedImage, stamps: ctxStamps, addStamp: ctxAddStamp, undoStamp: ctxUndoStamp, clearStamps: ctxClearStamps } = useContext(AnimationContext);
+  const [stamps, setStamps] = useState(ctxStamps || []);
   const [selectedGif, setSelectedGif] = useState(null);
   const [selectedStampId, setSelectedStampId] = useState(null);
 
@@ -50,8 +51,13 @@ function FrameMotionScreen() {
       height: STAMP_DEFAULT_SIZE,
     };
 
-    setStamps(prev => [...prev, newStamp]);
-  }, []);
+    setStamps(prev => {
+      const next = [...prev, newStamp];
+      // sync to context
+      try { ctxAddStamp(newStamp); } catch (e) { }
+      return next;
+    });
+  }, [ctxAddStamp]);
 
   // スタンプ選択トグル
   const toggleStampSelection = useCallback((id) => {
@@ -76,13 +82,15 @@ function FrameMotionScreen() {
   const undoLastStamp = useCallback(() => {
     setStamps(prev => (prev.length > 0 ? prev.slice(0, -1) : prev));
     setSelectedStampId(null);
-  }, []);
+    try { ctxUndoStamp(); } catch (e) { }
+  }, [ctxUndoStamp]);
 
   // 全削除
   const clearAllStamps = useCallback(() => {
     setStamps([]);
     setSelectedStampId(null);
-  }, []);
+    try { ctxClearStamps(); } catch (e) { }
+  }, [ctxClearStamps]);
 
   // キーボードショートカット (Ctrl/Cmd + Z)
   useEffect(() => {
@@ -97,6 +105,9 @@ function FrameMotionScreen() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [undoLastStamp]);
+
+  // keep local stamps in sync when context changes (e.g., coming back to this screen)
+  useEffect(() => setStamps(ctxStamps || []), [ctxStamps]);
 
   return (
     <div style={{
@@ -152,7 +163,7 @@ function FrameMotionScreen() {
             {/* 背景画像レイヤー */}
             <Layer>
               <URLImage
-                src={image2}
+                src={selectedImage || undefined}
                 stageWidth={stageSize.width}
                 stageHeight={stageSize.height}
               />
@@ -407,4 +418,4 @@ function StatusBar({ stampCount }) {
   );
 }
 
-export default FrameMotionScreen;
+export default StampScreen;
