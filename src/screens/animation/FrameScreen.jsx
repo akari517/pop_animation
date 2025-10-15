@@ -35,7 +35,7 @@ function FrameScreen() {
           <div
             className="image-wrapper"
             style={{ width: imageSize.width, height: imageSize.height }}
-            mr-100
+            mr-100="true"
           >
             <img
               src={selectedImage}

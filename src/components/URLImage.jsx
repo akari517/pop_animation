@@ -2,11 +2,8 @@ import React from "react";
 import { Image } from "react-konva";
 import useImage from "use-image";
 
-// 画像読み込み
 const URLImage = ({ src, stageWidth, stageHeight, ...rest }) => {
-console.log("URLImage src:", src);
-
-  const [image] = useImage(src);
+  const [image] = useImage(src, "anonymous"); // クロスオリジン対策
   if (!image) return null;
 
   const ratio = image.width / image.height;
@@ -26,4 +23,3 @@ console.log("URLImage src:", src);
 };
 
 export default URLImage;
-

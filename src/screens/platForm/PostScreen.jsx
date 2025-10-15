@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
+import { useContext } from "react";
+import { AnimationContext } from "../../context/AnimationContext";
 
 function PostScreen() {
   const [step, setStep] = useState(1); // 1: 画像アップロード, 2: タイトル入力
@@ -17,6 +19,7 @@ function PostScreen() {
 
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const { setSelectedImageFromFile } = useContext(AnimationContext);
 
   useEffect(() => {
     const fetchGenres = async () => {
@@ -57,7 +60,12 @@ function PostScreen() {
       const { data } = supabase.storage.from("images").getPublicUrl(fileName);
 
       setImageUrl(data.publicUrl);
-      setStep(2); // 次のステップへ
+      //navigate("/animation", { state: { imageUrl: data.publicUrl } });
+      setSelectedImageFromFile(file);
+      // アニメーション画面に遷移
+      navigate("/animation");
+
+      
     } catch (error) {
       console.error("アップロードエラー:", error);
       alert("画像のアップロードに失敗しました。");

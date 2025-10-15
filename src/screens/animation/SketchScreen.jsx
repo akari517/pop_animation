@@ -1,4 +1,4 @@
-// SketchScreenWithSupabase.jsx
+// SketchScreen.jsx
 import React, { useEffect, useRef, useState, useContext } from "react";
 import { AnimationContext } from "../../context/AnimationContext";
 import { Stage, Layer, Line, Circle } from "react-konva";
@@ -8,7 +8,6 @@ import { supabase} from "../../supabaseClient.js" ;
 import { getLineProps } from "./PenTools";
 import URLImage from "../../components/URLImage.jsx";
 import { useStageSize } from "../../components/useStageSize.jsx";
-import image2 from "../../assets/image4.jpg";
 
 const penTypes = [
   { value: "pen", label: "ノーマル" },
@@ -27,7 +26,7 @@ const colors = [
   "#1e90ff", "#9370db", "#ffffff", "#cccccc", "#000000"
 ];
 
-const SketchScreenWithSupabase = ({ user }) => {
+const SketchScreen = ({ user }) => {
   const isDrawing = useRef(false);
   const { selectedImage, shapes: ctxShapes, setShapes: setCtxShapes, tool: ctxTool, setTool: setCtxTool, color: ctxColor, setColor: setCtxColor } = useContext(AnimationContext);
   const [toolLocal, setToolLocal] = useState(ctxTool || "pen");
@@ -147,9 +146,15 @@ const SketchScreenWithSupabase = ({ user }) => {
           onTouchMove={handleMove}
           onTouchEnd={endDrawing}
         >
-          <Layer>
-            <URLImage src={image2} stageWidth={stageSize.width} stageHeight={contentHeight} />
-          </Layer>
+        <Layer>
+          {selectedImage?(
+            <URLImage
+              src={selectedImage}
+              stageWidth={stageSize.width}
+              stageHeight={contentHeight}
+            />
+          ):null}
+        </Layer>
           <Layer>
             {shapes.map((shape, i) => {
               const props = getLineProps(shape);
@@ -211,4 +216,4 @@ const SketchScreenWithSupabase = ({ user }) => {
   );
 };
 
-export default SketchScreenWithSupabase;
+export default SketchScreen;

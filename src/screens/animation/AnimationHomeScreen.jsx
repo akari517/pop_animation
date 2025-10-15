@@ -35,7 +35,7 @@ function AnimationHomeScreen() {
         }}
       >
         {/* 左端：画像選択 */}
-        <input
+        {/* <input
           accept="image/*"
           type="file"
           id="image-upload"
@@ -46,12 +46,12 @@ function AnimationHomeScreen() {
           <Button variant="contained" component="span">
             画像選択
           </Button>
-        </label>
+        </label> */}
 
         {/* 右端：編集完了 */}
-        <Button variant="contained" color="primary" onClick={handleComplete}>
+        {/* <Button variant="contained" color="primary" onClick={handleComplete}>
           編集完了
-        </Button>
+        </Button> */}
       </Box>
 
       {/* 選択画像のプレビュー
