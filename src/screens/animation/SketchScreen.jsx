@@ -27,7 +27,7 @@ const colors = [
 
 const SketchScreen = () => {
   const isDrawing = useRef(false);
-  const { selectedImage, shapes: ctxShapes, setShapes: setCtxShapes, tool: ctxTool, setTool: setCtxTool, color: ctxColor, setColor: setCtxColor } = useContext(AnimationContext);
+  const { selectedImage, shapes: ctxShapes, setShapes: setCtxShapes, addShape, undo, redo, clearAll, tool: ctxTool, setTool: setCtxTool, color: ctxColor, setColor: setCtxColor } = useContext(AnimationContext);
   const [toolLocal, setToolLocal] = useState(ctxTool || "pen");
   const [colorLocal, setColorLocal] = useState(ctxColor || "#ffb6c1");
   const [shapes, setShapes] = useState(ctxShapes || []);
