@@ -7,10 +7,8 @@
 
 .main-content {
   flex: 1;
-  overflow-y: auto;
-  /* コンテンツが多すぎた場合スクロール */
-  padding-bottom: var(--nav-height);
-  /* ナビゲーションバーの高さ分を確保 */
+  overflow-y: auto; /* コンテンツが多すぎた場合スクロール */
+  padding-bottom: var(--nav-height); /* ナビゲーションバーの高さ分を確保 */
 }
 
 .bottom-nav {
@@ -40,7 +38,7 @@
   transition: color 0.2s;
 }
 
-.nav-item>span {
+.nav-item > span {
   margin-top: 2px;
 }
 

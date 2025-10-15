@@ -8,8 +8,7 @@
   --primary-color: #4caf50;
   --background-color: #f0f0f7;
   --text-color: #333;
-  --nav-height: 60px;
-  /* ナビゲーションバーの高さ */
+  --nav-height: 60px; /* ナビゲーションバーの高さ */
 }
 
 body {
@@ -17,8 +16,7 @@ body {
   padding: 0;
   background-color: var(--background-color);
   color: var(--text-color);
-  overscroll-behavior: none;
-  /* スワイプ時のブラウザの「戻る」機能を無効化 */
+  overscroll-behavior: none; /* スワイプ時のブラウザの「戻る」機能を無効化 */
 }
 
 /* 全画面の共通コンテナスタイル */
@@ -56,4 +54,19 @@ h1 {
 
 .button:hover {
   background-color: #0056b3;
+}
+
+.liked-images-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
+}
+.liked-image-thumbnail {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 4px;
 }

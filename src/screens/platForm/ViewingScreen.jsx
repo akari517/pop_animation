@@ -1,27 +1,11 @@
-// src/screens/platorm/ViewingScreen.jsx
-import React, { useState } from "react";
-import "./ViewingScreen.css"; 
-
-// assetsフォルダから画像をインポート
-import image1 from "../../assets/image1.jpg";
-import image2 from "../..//assets/image2.jpg";
-import image3 from "../../assets/image3.jpg";
-
-// 初期データ
-const initialImageList = [
-  { id: "image1", src: image1, liked: false },
-  { id: "image2", src: image2, liked: false },
-  { id: "image3", src: image3, liked: false },
-];
-
-// アイコンコンポーネント
-// src/components/ViewingScreen.jsx
-
-// ...
-
+import React, { useState, useEffect } from "react";
+import "./ViewingScreen.css";
+import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../contexts/AuthContext";
+import { Link } from "react-router-dom";
+import { Snackbar, Alert } from "@mui/material";
 // アイコンコンポーネント
 const HeartIcon = ({ liked, onClick }) => (
-  // ▼ fill を 'none' に、stroke を 'black' に変更
   <svg
     onClick={onClick}
     width="28"
@@ -39,7 +23,6 @@ const HeartIcon = ({ liked, onClick }) => (
 );
 
 const ShareIcon = ({ onClick }) => (
-  // ▼ stroke を 'black' に変更
   <svg
     onClick={onClick}
     width="28"
@@ -59,37 +42,157 @@ const ShareIcon = ({ onClick }) => (
 );
 
 function ViewingScreen() {
-  const [imageList, setImageList] = useState(initialImageList);
+  const [works, setWorks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { currentUser } = useAuth();
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+
+      // 1. 全ての投稿をworksテーブルから取得
+      const { data: worksData, error: worksError } = await supabase
+        .from("works")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (worksError) {
+        console.error("投稿の取得エラー:", worksError);
+        setLoading(false);
+        return;
+      }
+
+      let likedWorkIds = new Set(); // IDの検索を高速化するためSetを使用
+
+      // 2. ログインしている場合のみ、いいね情報を取得してSetに追加
+      if (currentUser) {
+        const { data: userLikes, error: likesError } = await supabase
+          .from("likes")
+          .select("work_id")
+          .eq("user_id", currentUser.id);
+
+        if (likesError) {
+          console.error("いいね情報の取得エラー:", likesError);
+        } else if (userLikes) {
+          likedWorkIds = new Set(userLikes.map((like) => like.work_id));
+        }
+      }
+
+      // 3. ログイン状態に関わらず、一度だけ投稿データにいいね情報をマージ
+      const mergedWorks = worksData.map((work) => ({
+        ...work,
+        liked: likedWorkIds.has(work.work_id),
+      }));
+      setWorks(mergedWorks);
+
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [currentUser]);
 
   // いいねボタンの処理
-  const handleLike = (id) => {
-    setImageList((prevList) =>
-      prevList.map((image) =>
-        image.id === id ? { ...image, liked: !image.liked } : image
+  const handleLike = async (event, workId, currentLikedStatus) => {
+    event.preventDefault();
+    if (!currentUser) {
+      alert("いいねをするにはログインが必要です。");
+      return;
+    }
+
+    // UIを即時更新
+    setWorks(
+      works.map((work) =>
+        work.work_id === workId ? { ...work, liked: !work.liked } : work
       )
     );
+
+    if (currentLikedStatus) {
+      // いいね解除
+      await supabase
+        .from("likes")
+        .delete()
+        .match({ user_id: currentUser.id, work_id: workId });
+    } else {
+      // いいね追加
+      await supabase
+        .from("likes")
+        .insert([{ user_id: currentUser.id, work_id: workId }]);
+    }
   };
 
-  // 共有ボタンの処理（今回はコンソールに出力するだけ）
-  const handleShare = (id) => {
-    console.log(`Sharing image: ${id}`);
-    alert(`画像を共有します: ${id}`);
+  const handleShare = async (event, workId) => {
+    event.preventDefault(); // リンクへの遷移を防ぐ
+
+    // 投稿詳細ページの完全なURLを生成
+    const postUrl = `${window.location.origin}/work/${workId}`;
+
+    try {
+      await navigator.clipboard.writeText(postUrl);
+      // alertの代わりにSnackbarを表示する
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("URLのコピーに失敗しました:", error);
+      alert("URLのコピーに失敗しました。");
+    }
   };
+
+  // Snackbarを閉じるための関数
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="screen-container">
+        <p>読み込み中...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="feed-container">
-      {imageList.map((image) => (
-        <div key={image.id} className="image-card">
-          <img src={image.src} alt={image.id} className="feed-image" />
-          <div className="actions-container">
-            <ShareIcon onClick={() => handleShare(image.id)} />
-            <HeartIcon
-              liked={image.liked}
-              onClick={() => handleLike(image.id)}
-            />
+      {works.map((work) => (
+        <Link
+          to={`/work/${work.work_id}`}
+          key={work.work_id}
+          className="work-card-link"
+        >
+          <div key={work.work_id} className="image-card">
+            <img src={work.url} alt={work.title} className="feed-image" />
+            <div className="actions-container">
+              <p className="work-title">{work.title}</p>
+              <div className="icon-buttons">
+                <ShareIcon
+                  onClick={(event) => handleShare(event, work.work_id)}
+                />
+                <HeartIcon
+                  liked={work.liked}
+                  onClick={(event) =>
+                    handleLike(event, work.work_id, work.liked)
+                  }
+                />
+              </div>
+            </div>
           </div>
-        </div>
+        </Link>
       ))}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          URLをクリップボードにコピーしました！
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

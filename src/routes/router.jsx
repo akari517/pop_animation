@@ -11,6 +11,8 @@ import PostScreen from "../screens/platForm/PostScreen";
 import FavoritesScreen from "../screens/platForm/FavoritesScreen";
 import MyPageScreen from "../screens/platForm/MyPageScreen";
 import Layout from "../components/Layout";
+
+import DetailScreen from "../screens/platForm/DetailScreen";
 //import TestPostScreen from "../screens/platForm/TestPostScreen";
 
 //アニメーションのインポート
@@ -56,7 +58,7 @@ export const router = createBrowserRouter([
       },
     ],
   },
-
+  { path: "/work/:workId", element: <DetailScreen /> },
   // 未定義のルートは "/" にリダイレクト
   { path: "*", element: <Navigate to="/" /> },
 ]);

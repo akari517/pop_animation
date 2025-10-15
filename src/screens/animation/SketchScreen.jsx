@@ -3,7 +3,8 @@ import React, { useEffect, useRef, useState, useContext } from "react";
 import { AnimationContext } from "../../context/AnimationContext";
 import { Stage, Layer, Line, Circle } from "react-konva";
 import { Box, Button, useMediaQuery } from "@mui/material";
-import { supabase } from "../../lib/supabaseClient"; // Supabaseクライアントを設定済み
+//import { supabase } from "../..//lib/supabaseClient"; // Supabaseクライアントを設定済み
+import { supabase} from "../../supabaseClient.js" ;
 import { getLineProps } from "./PenTools";
 import URLImage from "../../components/URLImage.jsx";
 import { useStageSize } from "../../components/useStageSize.jsx";
