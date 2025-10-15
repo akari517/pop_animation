@@ -3,7 +3,8 @@ import "./ViewingScreen.css";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { Link } from "react-router-dom";
-// アイコンコンポーネント (変更なし)
+import { Snackbar, Alert } from "@mui/material";
+// アイコンコンポーネント
 const HeartIcon = ({ liked, onClick }) => (
   <svg
     onClick={onClick}
@@ -44,7 +45,7 @@ function ViewingScreen() {
   const [works, setWorks] = useState([]);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
-
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -60,8 +61,6 @@ function ViewingScreen() {
         setLoading(false);
         return;
       }
-
-      // ▼▼▼ この部分をよりシンプルに ▼▼▼
 
       let likedWorkIds = new Set(); // IDの検索を高速化するためSetを使用
 
@@ -121,10 +120,28 @@ function ViewingScreen() {
     }
   };
 
-  const handleShare = (event, id) => {
-    event.preventDefault();
-    console.log(`Sharing work: ${id}`);
-    alert(`作品を共有します: ${id}`);
+  const handleShare = async (event, workId) => {
+    event.preventDefault(); // リンクへの遷移を防ぐ
+
+    // 投稿詳細ページの完全なURLを生成
+    const postUrl = `${window.location.origin}/work/${workId}`;
+
+    try {
+      await navigator.clipboard.writeText(postUrl);
+      // alertの代わりにSnackbarを表示する
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("URLのコピーに失敗しました:", error);
+      alert("URLのコピーに失敗しました。");
+    }
+  };
+
+  // Snackbarを閉じるための関数
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
   };
 
   if (loading) {
@@ -162,6 +179,20 @@ function ViewingScreen() {
           </div>
         </Link>
       ))}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          URLをクリップボードにコピーしました！
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

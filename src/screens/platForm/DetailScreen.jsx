@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
+import { Snackbar, Alert } from "@mui/material";
 import "./DetailScreen.css";
 
 // アイコンコンポーネント
@@ -55,7 +56,7 @@ function DetailScreen() {
   const [allGenres, setAllGenres] = useState([]);
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
-
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
   // === データ取得処理 ===
   const fetchWorkAndLikeData = useCallback(async () => {
     if (!workId) return;
@@ -129,9 +130,25 @@ function DetailScreen() {
     }
   };
 
-  const handleShare = () => {
-    console.log(`Sharing work: ${workId}`);
-    alert(`作品を共有します: ${workId}`);
+  const handleShare = async () => {
+    const currentUrl = window.location.href;
+    try {
+      await navigator.clipboard.writeText(currentUrl);
+      // alertの代わりにSnackbarを表示する
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("URLのコピーに失敗しました:", error);
+      // エラー時はアラートを出すか、別のSnackbarを出すことも可能
+      alert("URLのコピーに失敗しました。");
+    }
+  };
+
+  // Snackbarを閉じるための関数
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
   };
 
   const handleStartEditing = () => {
@@ -307,6 +324,20 @@ function DetailScreen() {
           </div>
         </div>
       )}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000} // 3秒後に自動で閉じる
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }} // 画面下部中央に表示
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="success" // 緑色の「成功」スタイル
+          sx={{ width: "100%" }}
+        >
+          URLをクリップボードにコピーしました！
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

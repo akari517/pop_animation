@@ -45,7 +45,8 @@ function PostScreen() {
     setIsUploading(true);
 
     try {
-      const fileName = `${Date.now()}_${file.name}`;
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
         .from("images") // 作成したバケット名
         .upload(fileName, file);
