@@ -2,7 +2,7 @@
 import React from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import "./Layout.css";
-import { useAuth } from "../contexts/AuthContext"; // ← インポート
+import { useAuth } from "../context/AuthContext"; // ← インポート
 
 import HomeIcon from "@mui/icons-material/Home";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
