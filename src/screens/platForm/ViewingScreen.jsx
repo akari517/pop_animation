@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./ViewingScreen.css";
 import { supabase } from "../../supabaseClient";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { Snackbar, Alert } from "@mui/material";
 // アイコンコンポーネント
