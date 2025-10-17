@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom"; // Linkをインポート
 import { supabase } from "../../supabaseClient";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { Box, Tabs, Tab } from "@mui/material";
 
 // 投稿一覧を表示するための共通コンポーネント
