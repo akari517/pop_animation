@@ -6,7 +6,7 @@ import { getLineProps } from "./PenTools";
 import URLImage from "../../components/URLImage.jsx";
 import { useStageSize } from "../../components/useStageSize.jsx";
 
-"a"
+
 const SketchScreen = () => {
   const isDrawing = useRef(false);
   const { currentShapes, pushShapeHistory, undo, redo, clear, selectedImage, color, tool, setTool, setColor } = useContext(AnimationContext);
