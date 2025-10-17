@@ -16,15 +16,16 @@ export const AnimationProvider = ({ children }) => {
   const [simpleFrameColor, setSimpleFrameColor] = useState("#000000");
   const [workIdState, setWorkIdState] = useState(null);
 
-  // workIdState を更新し localStorage に保存
+  const currentShapes = shapesHistory[historyStep] || [];
+
+  // ----------------- workId管理 -----------------
   const setWorkId = (id) => {
     setWorkIdState(id);
     if (id) localStorage.setItem("workId", String(id));
     else localStorage.removeItem("workId");
   };
 
-  const currentShapes = shapesHistory[historyStep] || [];
-
+  // ----------------- 履歴管理 -----------------
   const pushShapeHistory = (newShapes) => {
     const newHistory = shapesHistory.slice(0, historyStep + 1);
     newHistory.push([...newShapes]);
@@ -41,12 +42,16 @@ export const AnimationProvider = ({ children }) => {
     setSelectedImage(null);
   };
 
+  // ----------------- 保存 -----------------
   const saveAnimation = async () => {
     if (!workIdState) {
       // 新規作成
       const { data, error } = await supabase
         .from("animations")
-        .insert([{ animation_data: currentShapes, created_at: new Date().toISOString() }])
+        .insert([{
+          animation_data: { shapes: currentShapes, stamps, selectedImage },
+          created_at: new Date().toISOString(),
+        }])
         .select()
         .single();
       if (error) {
@@ -62,7 +67,11 @@ export const AnimationProvider = ({ children }) => {
     // 追記・上書き
     const { error } = await supabase
       .from("animations")
-      .insert([{ work_id: workIdState, animation_data: currentShapes, created_at: new Date().toISOString() }]);
+      .insert([{
+        work_id: workIdState,
+        animation_data: { shapes: currentShapes, stamps, selectedImage },
+        created_at: new Date().toISOString(),
+      }]);
     if (error) {
       console.error("保存失敗:", error);
       alert("保存に失敗しました");
@@ -71,20 +80,7 @@ export const AnimationProvider = ({ children }) => {
     }
   };
 
-  const resetAnimation = () => {
-  setShapesHistory([[]]);
-  setHistoryStep(0);
-  setStamps([]);
-  setSelectedImage(null);
-  setWorkIdState(null);
-  setColor("#ffb6c1");
-  setTool("pen");
-  setActiveEffect("none");
-  setActiveFrame("none");
-  setSimpleFrameColor("#000000");
-  localStorage.removeItem("workId");
-};
-
+  // ----------------- ロード -----------------
   const loadAnimation = async (id) => {
     if (!id) return;
 
@@ -94,7 +90,7 @@ export const AnimationProvider = ({ children }) => {
       .eq("work_id", id)
       .order("created_at", { ascending: false })
       .limit(1)
-      .maybeSingle(); // 0行でもエラーにならない
+      .maybeSingle();
 
     if (error) {
       console.error("ロード失敗:", error);
@@ -106,16 +102,29 @@ export const AnimationProvider = ({ children }) => {
       return;
     }
 
-    if (data?.animation_data) {
-      // 前の内容を完全リセットしてロード
-      setShapesHistory([[...data.animation_data]]);
-      setHistoryStep(0);
-      setStamps([]);
-      setSelectedImage(null);
-    }
+    const loaded = data.animation_data || {};
+    setShapesHistory([[...(loaded.shapes || [])]]);
+    setHistoryStep(0);
+    setStamps(loaded.stamps || []);
+    setSelectedImage(loaded.selectedImage || null);
   };
 
-  // 起動時に localStorage から workId を読み込み、あればロード
+  // ----------------- リセット -----------------
+  const resetAnimation = () => {
+    setShapesHistory([[]]);
+    setHistoryStep(0);
+    setStamps([]);
+    setSelectedImage(null);
+    setColor("#ffb6c1");
+    setTool("pen");
+    setActiveEffect("none");
+    setActiveFrame("none");
+    setSimpleFrameColor("#000000");
+    setWorkIdState(null);
+    localStorage.removeItem("workId");
+  };
+
+  // 起動時に localStorage から workId を読み込み
   useEffect(() => {
     const stored = localStorage.getItem("workId");
     if (stored) {

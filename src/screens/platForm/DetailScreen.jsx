@@ -4,6 +4,7 @@ import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../context/AuthContext";
 import { Snackbar, Alert } from "@mui/material";
 import "./DetailScreen.css";
+import AnimationViewer from "./AnimationViewer";
 
 // アイコンコンポーネント
 const HeartIcon = ({ liked, onClick }) => (
@@ -57,6 +58,7 @@ function DetailScreen() {
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(false);
   // === データ取得処理 ===
   const fetchWorkAndLikeData = useCallback(async () => {
     if (!workId) return;
@@ -242,12 +244,10 @@ function DetailScreen() {
       </button>
 
       <div className="detail-card">
-        <img
-          src={work.url}
-          alt={isEditing ? editedTitle : work.title}
-          className="detail-image"
-        />
+        {/* アニメーションを常に表示 */}
+        <AnimationViewer workId={workId} width={600} height={400} />
 
+        {/* 編集フォームや作品情報はそのまま */}
         {isEditing ? (
           <div className="edit-form-container">
             <input
@@ -307,6 +307,7 @@ function DetailScreen() {
         )}
       </div>
 
+      {/* showEditOptions や Snackbar などはそのまま */}
       {showEditOptions && (
         <div className="modal-overlay">
           <div className="modal-content">
