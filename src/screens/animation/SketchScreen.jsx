@@ -10,6 +10,7 @@ import URLImage from "../../components/URLImage.jsx";
 import { useStageSize } from "../../components/useStageSize.jsx";
 
 const penTypes = [
+  
   { value: "pen", label: "ノーマル" },
   { value: "neon", label: "ネオン" },
   { value: "glitter", label: "キラキラ" },
