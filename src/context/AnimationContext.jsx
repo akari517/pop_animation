@@ -1,4 +1,6 @@
-import React, { createContext, useState } from "react";
+// src/context/AnimationContext.jsx
+import React, { createContext, useState, useEffect } from "react";
+import { supabase } from "../supabaseClient";
 
 export const AnimationContext = createContext();
 
@@ -12,12 +14,13 @@ export const AnimationProvider = ({ children }) => {
   const [activeEffect, setActiveEffect] = useState("none");
   const [activeFrame, setActiveFrame] = useState("none");
   const [simpleFrameColor, setSimpleFrameColor] = useState("#000000");
-  const [workId, setWorkId] = useState(null);
+  const [workIdState, setWorkIdState] = useState(null);
 
-  const setSelectedImageFromFile = (file) => {
-    const reader = new FileReader();
-    reader.onload = () => setSelectedImage(reader.result);
-    reader.readAsDataURL(file);
+  // workIdState を更新し localStorage に保存
+  const setWorkId = (id) => {
+    setWorkIdState(id);
+    if (id) localStorage.setItem("workId", String(id));
+    else localStorage.removeItem("workId");
   };
 
   const currentShapes = shapesHistory[historyStep] || [];
@@ -29,27 +32,108 @@ export const AnimationProvider = ({ children }) => {
     setHistoryStep(newHistory.length - 1);
   };
 
-  const undo = () => {
-    if (historyStep === 0) return;
-    setHistoryStep(historyStep - 1);
-  };
-
-  const redo = () => {
-    if (historyStep >= shapesHistory.length - 1) return;
-    setHistoryStep(historyStep + 1);
-  };
-
+  const undo = () => setHistoryStep((s) => Math.max(s - 1, 0));
+  const redo = () => setHistoryStep((s) => Math.min(s + 1, shapesHistory.length - 1));
   const clear = () => {
     setShapesHistory([[]]);
     setHistoryStep(0);
     setStamps([]);
+    setSelectedImage(null);
   };
+
+  const saveAnimation = async () => {
+    if (!workIdState) {
+      // 新規作成
+      const { data, error } = await supabase
+        .from("animations")
+        .insert([{ animation_data: currentShapes, created_at: new Date().toISOString() }])
+        .select()
+        .single();
+      if (error) {
+        console.error("保存失敗:", error);
+        alert("保存に失敗しました");
+        return;
+      }
+      setWorkId(data.work_id);
+      alert("保存しました！（新規作成）");
+      return;
+    }
+
+    // 追記・上書き
+    const { error } = await supabase
+      .from("animations")
+      .insert([{ work_id: workIdState, animation_data: currentShapes, created_at: new Date().toISOString() }]);
+    if (error) {
+      console.error("保存失敗:", error);
+      alert("保存に失敗しました");
+    } else {
+      alert("保存しました！（更新）");
+    }
+  };
+
+  const resetAnimation = () => {
+  setShapesHistory([[]]);
+  setHistoryStep(0);
+  setStamps([]);
+  setSelectedImage(null);
+  setWorkIdState(null);
+  setColor("#ffb6c1");
+  setTool("pen");
+  setActiveEffect("none");
+  setActiveFrame("none");
+  setSimpleFrameColor("#000000");
+  localStorage.removeItem("workId");
+};
+
+  const loadAnimation = async (id) => {
+    if (!id) return;
+
+    const { data, error } = await supabase
+      .from("animations")
+      .select("animation_data")
+      .eq("work_id", id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(); // 0行でもエラーにならない
+
+    if (error) {
+      console.error("ロード失敗:", error);
+      return;
+    }
+
+    if (!data) {
+      console.log("該当するアニメーションはまだ存在しません");
+      return;
+    }
+
+    if (data?.animation_data) {
+      // 前の内容を完全リセットしてロード
+      setShapesHistory([[...data.animation_data]]);
+      setHistoryStep(0);
+      setStamps([]);
+      setSelectedImage(null);
+    }
+  };
+
+  // 起動時に localStorage から workId を読み込み、あればロード
+  useEffect(() => {
+    const stored = localStorage.getItem("workId");
+    if (stored) {
+      setWorkId(stored);
+      loadAnimation(stored);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <AnimationContext.Provider
       value={{
         selectedImage,
-        setSelectedImageFromFile,
+        setSelectedImageFromFile: (file) => {
+          const reader = new FileReader();
+          reader.onload = () => setSelectedImage(reader.result);
+          reader.readAsDataURL(file);
+        },
         currentShapes,
         pushShapeHistory,
         undo,
@@ -67,8 +151,11 @@ export const AnimationProvider = ({ children }) => {
         setActiveFrame,
         simpleFrameColor,
         setSimpleFrameColor,
-        workId,
+        workId: workIdState,
         setWorkId,
+        saveAnimation,
+        loadAnimation,
+        resetAnimation,
       }}
     >
       {children}
