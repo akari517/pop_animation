@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { useContext } from "react";
 import { AnimationContext } from "../../context/AnimationContext";
 
@@ -19,7 +19,7 @@ function PostScreen() {
 
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const { setSelectedImageFromFile } = useContext(AnimationContext);
+  const { setSelectedImageFromFile, setWorkId } = useContext(AnimationContext);
 
   useEffect(() => {
     const fetchGenres = async () => {
@@ -63,7 +63,8 @@ function PostScreen() {
       //navigate("/animation", { state: { imageUrl: data.publicUrl } });
       setSelectedImageFromFile(file);
       // アニメーション画面に遷移
-      navigate("/animation");
+      // navigate("/animation");
+      setStep(2);
 
       
     } catch (error) {
@@ -122,8 +123,9 @@ function PostScreen() {
         if (genreError) throw genreError;
       }
 
-      alert("投稿が完了しました！");
-      navigate("/home");
+      alert("投稿が完了しました！");      
+      setWorkId(newWork.work_id); // ← ここでContextに保存！
+      navigate("/animation");
     } catch (error) {
       console.error("投稿エラー:", error);
       alert("投稿に失敗しました。");
