@@ -1,4 +1,5 @@
 import React, { createContext, useState } from "react";
+import { supabase } from "../supabaseClient";
 
 export const AnimationContext = createContext();
 
@@ -45,6 +46,64 @@ export const AnimationProvider = ({ children }) => {
     setStamps([]);
   };
 
+  const saveAnimation = async (userId = null) => {
+    try {
+      const currentShapes = shapesHistory[historyStep];
+      // if (!currentShapes || currentShapes.length === 0) {
+      //   throw new Error('保存するアニメーションデータがありません');
+      // }
+
+      if (!workId) {
+        throw new Error('作品IDが必要です');
+      }
+
+      const animationData = {
+        work_id: workId,
+        user_id: userId,
+        animation_data: currentShapes.map(shape => ({
+          points: shape.points,
+          animation: shape.animation,
+          width: shape.width,
+          height: shape.height,
+          minX: shape.minX,
+          minY: shape.minY,
+          color: shape.color,
+          tool: shape.tool
+        }))
+      };
+
+      const { data, error } = await supabase
+        .from('animations')
+        .upsert([animationData], {
+          onConflict: 'id'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('アニメーション保存エラー:', error);
+      throw error;
+    }
+  };
+
+  const loadAnimationFromDb = async (workId) => {
+    try {
+      const { data, error } = await supabase
+        .from('animations')
+        .select('animation_data')
+        .eq('work_id', workId)
+        .single();
+
+      if (error) throw error;
+      return data?.animation_data || [];
+    } catch (error) {
+      console.error('アニメーション読み込みエラー:', error);
+      throw error;
+    }
+  };
+
   return (
     <AnimationContext.Provider
       value={{
@@ -55,6 +114,8 @@ export const AnimationProvider = ({ children }) => {
         undo,
         redo,
         clear,
+        saveAnimation,
+        loadAnimationFromDb,
         stamps,
         setStamps,
         color,

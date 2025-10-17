@@ -9,12 +9,28 @@ import { getAnimProps, animationList } from "./FrameMotionAnimation.js";
 
 function FrameMotionScreen() {
   const stageSize = useStageSize(70);
-  const { selectedImage } = useContext(AnimationContext);
+  const { selectedImage, saveAnimationToDb, loadAnimationFromDb, workId } = useContext(AnimationContext);
   const [bg] = useImage(selectedImage || image2);
   const { shapes, handleDown, handleMove, endDrawing, setShapes } = useDrawing([], "#0ff", "pen");
+  const [isSaving, setIsSaving] = useState(false);
   const [selectedShape, setSelectedShape] = useState(null);
 
   const cutImages = useRef({});
+
+  // 既存のアニメーションデータを読み込む
+  useEffect(() => {
+    if (workId) {
+      loadAnimationFromDb(workId)
+        .then(animationData => {
+          if (animationData && animationData.length > 0) {
+            setShapes(animationData);
+          }
+        })
+        .catch(error => {
+          console.error('アニメーションの読み込みに失敗しました:', error);
+        });
+    }
+  }, [workId, loadAnimationFromDb, setShapes]);
 
   // 線を閉じて切り抜き画像を作成
   const closeShapeIfNeeded = () => {
@@ -95,6 +111,41 @@ function FrameMotionScreen() {
 
   return (
     <div style={{ textAlign: "center", padding: 10 }}>
+      {/* 保存ボタン */}
+      <div style={{ marginBottom: 10 }}>
+        <button
+          onClick={async () => {
+            if (!workId) {
+              alert('作品IDが必要です。先に作品を保存してください。');
+              return;
+            }
+            try {
+              setIsSaving(true);
+              await saveAnimationToDb(shapes, workId);
+              alert('アニメーションを保存しました！');
+            } catch (error) {
+              console.error('保存エラー:', error);
+              alert('アニメーションの保存に失敗しました');
+            } finally {
+              setIsSaving(false);
+            }
+          }}
+          style={{
+            padding: "8px 16px",
+            fontSize: "14px",
+            backgroundColor: "#4CAF50",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: isSaving ? "not-allowed" : "pointer",
+            opacity: isSaving ? 0.7 : 1
+          }}
+          disabled={isSaving || shapes.length === 0}
+        >
+          {isSaving ? "保存中..." : "アニメーションを保存"}
+        </button>
+      </div>
+
       <Stage
         width={stageSize.width}
         height={stageSize.height}
