@@ -1,0 +1,294 @@
+/* ===============================
+   全体レイアウトとリセット
+   =============================== */
+
+/* 最初にデフォルトの余白をリセット */
+body,
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: sans-serif;
+  background-color: #333;
+}
+
+/* アプリ全体のコンテナ */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: white;
+  overflow: hidden;
+}
+
+/* ===============================
+   上部ナビゲーション
+   =============================== */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: white;
+  flex-shrink: 0;
+}
+
+.select-button {
+  border: 1px solid #007aff;
+  background-color: white;
+  color: #007aff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.done-button {
+  border: none;
+  background-color: #007aff;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ===============================
+   画像表示エリア
+   =============================== */
+.image-viewport {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f0f0;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.placeholder-text {
+  color: #888;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* 画像とオーバーレイを重ねるラッパー */
+.image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: filter 0.3s ease-in-out;
+}
+
+/* ===============================
+   共通
+   =============================== */
+.image-wrapper {
+  position: relative;
+  display: inline-block;
+  margin: 40px;
+}
+
+.frame-overlay {
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  box-sizing: content-box;
+}
+
+/* ===============================
+   本体フレーム
+   =============================== */
+/* シンプルフレーム */
+.simple-frame {
+  border: 15px solid red;
+}
+
+/* 花柄フレーム */
+.flower-frame {
+  border: 15px solid pink;
+  border-image: url("../Frames/flower-frame.png") 30 round;
+}
+
+/* 額縁フレーム1 */
+.frame-overlay.image-frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("/Frames/frame-01.png");
+  background-size: cover;
+  background-position: center;
+
+  /* 中心を基準に拡大 */
+  transform: scale(1.1);
+  transform-origin: center;
+}
+
+/* 額縁フレーム2 */
+.frame-overlay.image-frame2 {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("/Frames/frame-02.png");
+  background-size: cover;
+  background-position: center;
+
+  /* 中心を基準に拡大 */
+  transform: scale(1.22);
+  transform-origin: center;
+}
+
+/* ===============================
+   選択カルーセル
+   =============================== */
+.effects-carousel {
+  display: flex;
+  overflow-x: auto;
+  padding: 16px 8px;
+  background-color: white;
+  gap: 12px;
+  flex-shrink: 0;
+
+  /* スクロールバー非表示 */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.effects-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.effect-thumbnail {
+  cursor: pointer;
+  text-align: center;
+  font-size: 12px;
+  color: #555;
+  padding: 4px;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.effect-thumbnail.active {
+  border-color: #007aff;
+  color: #007aff;
+  font-weight: bold;
+}
+
+.effect-thumbnail img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+
+.no-effect-icon-wrapper {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.thumbnail-base-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.no-effect-icon-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  background-image: linear-gradient(to top right, transparent calc(50% - 1px), #fff, transparent calc(50% + 1px));
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.thumbnail-placeholder {
+  width: 60px;
+  height: 60px;
+  background-color: #e9e9e9;
+  border-radius: 6px;
+}
+
+
+.thumbnail-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.thumb-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+/* ===============================
+   サムネイル用
+   =============================== */
+
+/* サムネイル - シンプルフレーム */
+.thumb-overlay.simple-frame-thumb {
+  border: 3px solid red;
+}
+
+/* サムネイル - 花柄 */
+.thumb-overlay.flower-frame-thumb {
+  border: 3px solid pink;
+  border-image: url("/Frames/flower-frame.png") 10 round;
+}
+
+/* サムネイル - 額縁1 */
+.thumb-overlay.image-frame-thumb {
+  background-image: url("/Frames/frame-01.png");
+  background-size: cover;
+  background-position: center;
+}
+
+/* サムネイル - 額縁2 */
+.thumb-overlay.image-frame-thumb2 {
+  background-image: url("/Frames/frame-02.png");
+  background-size: cover;
+  background-position: center;
+}
+
+/* ===============================
+   カラーピッカー
+   =============================== */
+.color-picker-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.color-picker-emoji {
+  font-size: 20px;
+}
+
+.color-picker {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
