@@ -6,10 +6,11 @@ import { AnimationContext } from "../../context/AnimationContext";
 import { useStageSize } from "../../components/useStageSize.jsx";
 import { useDrawing } from "../../components/useDrawing";
 import { getAnimProps, animationList } from "./FrameMotionAnimation.js";
+import AnimationMenu from "../../components/AnimationMenu";
 
 function FrameMotionScreen() {
   const stageSize = useStageSize(70);
-  const { selectedImage } = useContext(AnimationContext);
+  const { selectedImage, stamps, setStamps, saveAnimation, workId } = useContext(AnimationContext);
   const [bg] = useImage(selectedImage || image2);
   const { shapes, handleDown, handleMove, endDrawing, setShapes } = useDrawing([], "#0ff", "pen");
   const [selectedShape, setSelectedShape] = useState(null);
@@ -93,8 +94,17 @@ function FrameMotionScreen() {
     );
   };
 
+  // 保存ボタンの処理
+  const handleSave = () => {
+    if (!workId) {
+      alert("workIdが未設定です");
+      return;
+    }
+    saveAnimation();
+  };
+
   return (
-    <div style={{ textAlign: "center", padding: 10 }}>
+    <div style={{ width: "100%", height: "100vh", position: "relative", background: "#fcfffdff", overflow: "hidden" }}>
       <Stage
         width={stageSize.width}
         height={stageSize.height}
@@ -186,8 +196,17 @@ function FrameMotionScreen() {
           </div>
         ))}
       </div>
+
+      {/* 保存ボタン */}
+      <button onClick={handleSave} style={{ marginTop: 20, padding: "10px 20px", fontSize: 16, borderRadius: 8, border: "none", cursor: "pointer", backgroundColor: "#2196F3", color: "#fff", fontWeight: "bold", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", transition: "background-color 0.3s ease" }}>
+        💾 Save
+      </button>
+
+      {/* 画面下部メニュー */}
+      <AnimationMenu />
     </div>
   );
 }
 
 export default FrameMotionScreen;
+

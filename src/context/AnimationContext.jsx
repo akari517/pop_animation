@@ -129,9 +129,8 @@ export const AnimationProvider = ({ children }) => {
     const stored = localStorage.getItem("workId");
     if (stored) {
       setWorkId(stored);
-      loadAnimation(stored);
+      loadAnimation(stored); // ← ここで selectedImage も復元される
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

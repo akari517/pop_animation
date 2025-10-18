@@ -25,8 +25,8 @@ const GIF_ASSETS = [
 
 function StampScreen() {
   const stageSize = useStageSize(70);
-  // AnimationContextからstamps, setStamps, selectedImageを取得
-  const { stamps, setStamps, selectedImage } = useContext(AnimationContext);
+  // AnimationContextからstampsとsetStampsを取得
+  const { stamps, setStamps } = useContext(AnimationContext);
 
   // --- GIF選択 ---
   const [selectedGif, setSelectedGif] = useState(null);
