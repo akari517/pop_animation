@@ -1,7 +1,7 @@
 // src/components/AnimationViewer.jsx
 
 import React, { useState, useEffect } from "react";
-import { Stage, Layer, Line, Circle } from "react-konva";
+import { Stage, Layer, Line, Circle, Image as KonvaImage } from "react-konva";
 import { getLineProps } from "../../screens/animation/PenTools";
 import URLImage from "../../components/URLImage";
 
@@ -11,6 +11,7 @@ function AnimationViewer({ width = 600, height = 400, animationData }) {
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
 
   const shapes = animationData?.shapes || [];
+  const stamps = animationData?.stamps || [];
   const bgImage = animationData?.selectedImage || null;
 
   useEffect(() => {
@@ -29,6 +30,8 @@ function AnimationViewer({ width = 600, height = 400, animationData }) {
     return <div>アニメーションがありません</div>;
   }
 
+  console.log("animationData", animationData);
+
   return (
     <div>
       <Stage width={width} height={height}>
@@ -36,88 +39,46 @@ function AnimationViewer({ width = 600, height = 400, animationData }) {
           {bgImage && (
             <URLImage
               src={bgImage}
-              stageWidth={width}
-              stageHeight={height}
-              x={0}
-              y={0}
               width={width}
               height={height}
+              x={0}
+              y={0}
             />
           )}
         </Layer>
         <Layer>
           {currentFrameShapes.map((shape, i) => {
             const props = getLineProps(shape);
-
-            // 風船ペン
-            if (shape.tool === "balloon" || props.balloon) {
-              return shape.points.reduce((arr, _, idx) => {
-                if (idx % 2 === 0) {
-                  arr.push(
-                    <Circle
-                      key={`balloon-${i}-${idx}`}
-                      x={shape.points[idx]}
-                      y={shape.points[idx + 1]}
-                      radius={6 + Math.random() * 6}
-                      fill={props.fill || shape.color}
-                      shadowBlur={props.shadowBlur || 8}
-                      shadowColor={props.shadowColor || "#fff"}
-                      opacity={props.opacity || 0.8}
-                    />
-                  );
-                }
-                return arr;
-              }, []);
-            }
-
-            // キラキラペン
-            if (shape.tool === "glitter") {
-              return (
-                <React.Fragment key={i}>
-                  <Line {...props} />
-                  {shape.points.reduce((arr, _, idx) => {
-                    if (idx % 2 === 0)
-                      arr.push(
-                        <Circle
-                          key={`g-${i}-${idx}`}
-                          x={shape.points[idx]}
-                          y={shape.points[idx + 1]}
-                          radius={Math.random() * 2 + 1}
-                          fill="#fffacd"
-                          opacity={Math.random()}
-                        />
-                      );
-                    return arr;
-                  }, [])}
-                </React.Fragment>
-              );
-            }
-
-            // ネオンペン
-            if (shape.tool === "neon") {
-              return (
-                <React.Fragment key={i}>
-                  <Line
-                    points={shape.points}
-                    stroke={shape.color}
-                    strokeWidth={12}
-                    lineCap="round"
-                    lineJoin="round"
-                    tension={0.5}
-                    opacity={0.4}
-                  />
-                  <Line {...props} />
-                </React.Fragment>
-              );
-            }
-
-            // その他
             return <Line key={i} {...props} />;
           })}
+          {Array.isArray(stamps) &&
+            stamps.map((stamp, idx) => (
+              <StampImage
+                key={stamp.id || idx}
+                src={stamp.src}
+                x={stamp.x}
+                y={stamp.y}
+                width={stamp.width}
+                height={stamp.height}
+              />
+            ))}
         </Layer>
       </Stage>
     </div>
   );
+}
+
+// StampImageコンポーネントを追加
+function StampImage({ src, x, y, width, height }) {
+  const [image, setImage] = useState(null);
+  useEffect(() => {
+    const img = new window.Image();
+    img.src = src;
+    img.onload = () => setImage(img);
+  }, [src]);
+  return image ? (
+    <KonvaImage image={image} x={x} y={y} width={width} height={height} />
+  ) : null;
 }
 
 export default AnimationViewer;
