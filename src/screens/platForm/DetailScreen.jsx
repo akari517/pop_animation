@@ -6,7 +6,7 @@ import { Snackbar, Alert } from "@mui/material";
 import "./DetailScreen.css";
 import AnimationViewer from "./AnimationViewer";
 
-// Heart アイコン
+// アイコンコンポーネント
 const HeartIcon = ({ liked, onClick }) => (
   <svg
     onClick={onClick}
@@ -24,7 +24,6 @@ const HeartIcon = ({ liked, onClick }) => (
   </svg>
 );
 
-// Share アイコン
 const ShareIcon = ({ onClick }) => (
   <svg
     onClick={onClick}
@@ -60,33 +59,50 @@ function DetailScreen() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [animations, setAnimations] = useState([]);
 
-  // 投稿といいねデータ取得
-  const fetchWorkAndLikeData = useCallback(async () => {
+  // === データ取得処理 ===
+  const fetchData = useCallback(async () => {
     if (!workId) return;
     setLoading(true);
     try {
+      const numericWorkId = Number(workId);
+
+      // 1. 作品情報を取得
       const { data: workData, error: workError } = await supabase
         .from("works")
         .select(`*, work_genres ( genres ( genre_id, genre_name ) )`)
-        .eq("work_id", Number(workId))
+        .eq("work_id", numericWorkId)
         .single();
       if (workError) throw workError;
 
+      // 2. いいね情報を取得
       let isLiked = false;
       if (currentUser) {
         const { data: likeData } = await supabase
           .from("likes")
           .select("work_id")
-          .match({ user_id: currentUser.id, work_id: Number(workId) })
+          .match({ user_id: currentUser.id, work_id: numericWorkId })
           .single();
         isLiked = !!likeData;
       }
 
+      // 3. アニメーション情報を取得
+      const { data: animationData, error: animationError } = await supabase
+        .from("animations")
+        .select("animation_data")
+        .eq("work_id", numericWorkId)
+        .order("created_at", { ascending: false });
+      if (animationError) throw animationError;
+
+      // 全てのデータをstateに保存
+      setAnimations(animationData || []);
       setWork({ ...workData, liked: isLiked });
       setEditedTitle(workData.title);
       setSelectedGenres(workData.work_genres.map((wg) => wg.genres.genre_id));
     } catch (error) {
-      console.error("投稿データ取得エラー:", error);
+      if (error.code !== "PGRST116") {
+        // 行が見つからないエラーは無視
+        console.error("データ取得エラー:", error);
+      }
       setWork(null);
     } finally {
       setLoading(false);
@@ -94,60 +110,59 @@ function DetailScreen() {
   }, [workId, currentUser]);
 
   useEffect(() => {
-    fetchWorkAndLikeData();
-
+    fetchData();
     const fetchAllGenres = async () => {
       const { data } = await supabase.from("genres").select("*");
       setAllGenres(data || []);
     };
     fetchAllGenres();
-  }, [fetchWorkAndLikeData]);
+  }, [fetchData]);
 
-  // アニメーション取得
-  useEffect(() => {
-    const fetchAnimations = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("animations")
-          .select("animation_data, created_at, id")
-          .eq("work_id", Number(workId))
-          .order("created_at", { ascending: false });
-
-        if (error) {
-          console.error("アニメーション取得エラー:", error);
-          return;
-        }
-        if (Array.isArray(data)) setAnimations(data);
-      } catch (e) {
-        console.error("アニメーション取得例外:", e);
-      }
-    };
-    if (workId) fetchAnimations();
-  }, [workId]);
-
-  // いいね
+  // === イベントハンドラ ===
   const handleLike = async () => {
-    if (!currentUser || !work) {
-      alert("ログインが必要です。");
-      return;
-    }
+    if (!currentUser || !work) return;
     const currentLikedStatus = work.liked;
-    setWork((prevWork) => ({ ...prevWork, liked: !currentLikedStatus }));
+    setWork((prev) => ({ ...prev, liked: !currentLikedStatus }));
+    const numericWorkId = Number(workId);
     if (currentLikedStatus) {
-      const { error } = await supabase
+      await supabase
         .from("likes")
         .delete()
-        .match({ user_id: currentUser.id, work_id: Number(workId) });
-      if (error) setWork((prev) => ({ ...prev, liked: currentLikedStatus }));
+        .match({ user_id: currentUser.id, work_id: numericWorkId });
     } else {
-      const { error } = await supabase
+      await supabase
         .from("likes")
-        .insert([{ user_id: currentUser.id, work_id: Number(workId) }]);
-      if (error) setWork((prev) => ({ ...prev, liked: currentLikedStatus }));
+        .insert([{ user_id: currentUser.id, work_id: numericWorkId }]);
     }
   };
 
-  // 共有
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    const numericWorkId = Number(workId);
+    try {
+      await supabase
+        .from("works")
+        .update({ title: editedTitle })
+        .eq("work_id", numericWorkId);
+      await supabase.from("work_genres").delete().eq("work_id", numericWorkId);
+      if (selectedGenres.length > 0) {
+        const newWorkGenres = selectedGenres.map((genreId) => ({
+          work_id: numericWorkId,
+          genre_id: genreId,
+        }));
+        await supabase.from("work_genres").insert(newWorkGenres);
+      }
+      alert("更新しました");
+      setIsEditing(false);
+      fetchData(); // 更新後のデータを再取得
+    } catch (error) {
+      console.error("更新エラー:", error);
+      alert("更新に失敗しました。");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -175,57 +190,7 @@ function DetailScreen() {
     );
   };
 
-  const handleSaveChanges = async () => {
-    setIsSaving(true);
-    try {
-      const { error: updateError } = await supabase
-        .from("works")
-        .update({ title: editedTitle })
-        .eq("work_id", Number(workId));
-      if (updateError) throw updateError;
-
-      const { error: deleteError } = await supabase
-        .from("work_genres")
-        .delete()
-        .eq("work_id", Number(workId));
-      if (deleteError) throw deleteError;
-
-      if (selectedGenres.length > 0) {
-        const newWorkGenres = selectedGenres.map((genreId) => ({
-          work_id: Number(workId),
-          genre_id: genreId,
-        }));
-        const { error: insertError } = await supabase
-          .from("work_genres")
-          .insert(newWorkGenres);
-        if (insertError) throw insertError;
-      }
-
-      alert("更新が完了しました。");
-      setIsEditing(false);
-
-      const updatedGenresForState = allGenres
-        .filter((genre) => selectedGenres.includes(genre.genre_id))
-        .map((genre) => ({
-          genres: {
-            genre_id: genre.genre_id,
-            genre_name: genre.genre_name,
-          },
-        }));
-
-      setWork((prevWork) => ({
-        ...prevWork,
-        title: editedTitle,
-        work_genres: updatedGenresForState,
-      }));
-    } catch (error) {
-      console.error("更新エラー:", error);
-      alert("更新に失敗しました。");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
+  // === レンダリング処理 ===
   if (loading)
     return (
       <div className="detail-container">
@@ -241,24 +206,30 @@ function DetailScreen() {
 
   const isOwner = currentUser && currentUser.id === work.user_id;
 
-  // animationData を安全に構築
-  const animationData =
-    animations.length === 0
-      ? null
-      : (() => {
-          const firstAnimation = animations[0].animation_data;
-          const getShapes = (a) =>
-            typeof a.animation_data === "object"
-              ? a.animation_data.shapes || []
-              : typeof a.animation_data === "string"
-              ? JSON.parse(a.animation_data)?.shapes || []
-              : [];
-          return {
-            frames: animations.map((a) => getShapes(a)),
-            stamps: firstAnimation?.stamps || [],
-            selectedImage: firstAnimation?.selectedImage || null,
-          };
-        })();
+  const animationDataForViewer = (() => {
+    if (!animations || animations.length === 0) return null;
+    const parse = (record) => {
+      if (
+        typeof record.animation_data === "object" &&
+        record.animation_data !== null
+      )
+        return record.animation_data;
+      if (typeof record.animation_data === "string") {
+        try {
+          return JSON.parse(record.animation_data);
+        } catch {
+          return {};
+        }
+      }
+      return {};
+    };
+    const firstFrame = parse(animations[0]);
+    return {
+      frames: animations.map((a) => parse(a).shapes || []),
+      stamps: firstFrame.stamps || [],
+      selectedImage: work.url,
+    };
+  })();
 
   return (
     <div className="detail-container">
@@ -270,15 +241,17 @@ function DetailScreen() {
       </button>
 
       <div className="detail-card">
-        {animationData ? (
-          <AnimationViewer
-            animationData={animationData}
-            width={600}
-            height={400}
-          />
-        ) : (
-          <div>アニメーションがありません</div>
-        )}
+        <div className="animation-container">
+          {animations.length > 0 && animationDataForViewer ? (
+            <AnimationViewer
+              animationData={animationDataForViewer}
+              width={600}
+              height={400}
+            />
+          ) : (
+            <img src={work.url} alt={work.title} className="detail-image" />
+          )}
+        </div>
 
         {isEditing ? (
           <div className="edit-form-container">
@@ -311,7 +284,7 @@ function DetailScreen() {
           </div>
         ) : (
           <>
-            {work.work_genres && work.work_genres.length > 0 && (
+            {work.work_genres?.length > 0 && (
               <div className="genres-container">
                 {work.work_genres.map(({ genres }) => (
                   <span key={genres.genre_name} className="genre-tag">
