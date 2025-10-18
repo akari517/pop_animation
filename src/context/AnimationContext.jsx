@@ -44,31 +44,42 @@ export const AnimationProvider = ({ children }) => {
 
   // ----------------- 保存 -----------------
   const saveAnimation = async () => {
-    if (!workIdState) {
-      // 新規作成
-      const { data, error } = await supabase
-        .from("animations")
-        .insert([{
-          animation_data: {
-            shapes: currentShapes,
-            stamps,
-            selectedImage,
-            frame: activeFrame,             
-            simpleFrameColor,  
-          },
-          created_at: new Date().toISOString(),
-        }])
-        .select()
-        .single();
-      if (error) {
-        console.error("保存失敗:", error);
-        alert("保存に失敗しました");
-        return;
-      }
-      setWorkId(data.work_id);
-      alert("保存しました！（新規作成）");
+  try {
+    const payload = {
+      work_id: workIdState ? Number(workIdState) : undefined,
+      animation_data: JSON.stringify({
+        shapes: currentShapes,
+        stamps,
+        selectedImage,
+        frame: activeFrame,
+        simpleFrameColor,
+      }),
+      created_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase
+      .from("animations")
+      .insert([payload])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("保存失敗:", error);
+      alert("保存に失敗しました");
       return;
     }
+
+    if (!workIdState && data?.work_id) {
+      setWorkId(data.work_id);
+    }
+
+    alert("保存しました！");
+  } catch (err) {
+    console.error("保存例外:", err);
+    alert("保存に失敗しました");
+  }
+
+
 
     // 追記・上書き
     const { error } = await supabase
