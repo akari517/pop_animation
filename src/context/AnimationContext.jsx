@@ -49,7 +49,13 @@ export const AnimationProvider = ({ children }) => {
       const { data, error } = await supabase
         .from("animations")
         .insert([{
-          animation_data: { shapes: currentShapes, stamps, selectedImage },
+          animation_data: {
+            shapes: currentShapes,
+            stamps,
+            selectedImage,
+            frame: activeFrame,             
+            simpleFrameColor,  
+          },
           created_at: new Date().toISOString(),
         }])
         .select()
@@ -69,7 +75,13 @@ export const AnimationProvider = ({ children }) => {
       .from("animations")
       .insert([{
         work_id: workIdState,
-        animation_data: { shapes: currentShapes, stamps, selectedImage },
+        animation_data: {
+          shapes: currentShapes,
+          stamps,
+          selectedImage,
+          frame: activeFrame,             
+          simpleFrameColor,               
+        },
         created_at: new Date().toISOString(),
       }]);
     if (error) {
@@ -79,7 +91,6 @@ export const AnimationProvider = ({ children }) => {
       alert("保存しました！（更新）");
     }
   };
-
   // ----------------- ロード -----------------
   const loadAnimation = async (id) => {
     if (!id) return;
@@ -107,6 +118,8 @@ export const AnimationProvider = ({ children }) => {
     setHistoryStep(0);
     setStamps(loaded.stamps || []);
     setSelectedImage(loaded.selectedImage || null);
+    setActiveFrame(loaded.frame || "none");                 
+    setSimpleFrameColor(loaded.simpleFrameColor || "#000000"); 
   };
 
   // ----------------- リセット -----------------
