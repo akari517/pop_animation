@@ -3,7 +3,6 @@ import { Stage, Layer, Line, Image as KonvaImage } from "react-konva";
 import { getLineProps } from "../../screens/animation/PenTools";
 import URLImage from "../../components/URLImage";
 
-// スタンプ用コンポーネント
 function StampImage({ src, x, y, width, height }) {
   const [image, setImage] = useState(null);
   useEffect(() => {
@@ -29,25 +28,13 @@ function AnimationViewer({ width = 600, height = 400, animationData }) {
   const rafRef = useRef(null);
   const lastTimeRef = useRef(0);
 
-  // shapesをフレーム配列に正規化
-  const frames = (() => {
-    if (!animationData) return [];
-    if (Array.isArray(animationData.frames)) return animationData.frames;
-    if (Array.isArray(animationData.shapes) && Array.isArray(animationData.shapes[0])) {
-      return animationData.shapes;
-    }
-    if (Array.isArray(animationData.shapes)) return [animationData.shapes];
-    return [];
-  })();
-
+  const frames = animationData?.frames || [];
   const stamps = animationData?.stamps || [];
   const bgImage = animationData?.selectedImage || null;
   const fps = animationData?.frameRate || DEFAULT_FPS;
   const frameIntervalMs = 1000 / fps;
 
-  useEffect(() => {
-    setCurrentFrameIndex(0);
-  }, [frames.length]);
+  useEffect(() => setCurrentFrameIndex(0), [frames.length]);
 
   useEffect(() => {
     if (!frames || frames.length <= 1) return;
@@ -62,7 +49,6 @@ function AnimationViewer({ width = 600, height = 400, animationData }) {
       rafRef.current = requestAnimationFrame(step);
     };
     rafRef.current = requestAnimationFrame(step);
-
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       lastTimeRef.current = 0;
@@ -71,37 +57,30 @@ function AnimationViewer({ width = 600, height = 400, animationData }) {
 
   const currentFrameShapes = frames[currentFrameIndex] || [];
 
-  if (!animationData || !Array.isArray(currentFrameShapes)) {
-    return <div>アニメーションがありません</div>;
-  }
+  if (!frames.length) return <div>アニメーションがありません</div>;
 
   return (
-    <div>
-      <Stage width={width} height={height}>
-        <Layer>
-          {bgImage && (
-            <URLImage src={bgImage} width={width} height={height} x={0} y={0} />
-          )}
-        </Layer>
-        <Layer>
-          {currentFrameShapes.map((shape, i) => {
-            const props = getLineProps(shape);
-            return <Line key={i} {...props} />;
-          })}
-          {Array.isArray(stamps) &&
-            stamps.map((stamp, idx) => (
-              <StampImage
-                key={stamp.id || idx}
-                src={stamp.src}
-                x={stamp.x}
-                y={stamp.y}
-                width={stamp.width}
-                height={stamp.height}
-              />
-            ))}
-        </Layer>
-      </Stage>
-    </div>
+    <Stage width={width} height={height}>
+      <Layer>
+        {bgImage && <URLImage src={bgImage} width={width} height={height} x={0} y={0} />}
+      </Layer>
+      <Layer>
+        {currentFrameShapes.map((shape, i) => {
+          const props = getLineProps(shape);
+          return <Line key={i} {...props} />;
+        })}
+        {stamps.map((stamp, idx) => (
+          <StampImage
+            key={stamp.id || idx}
+            src={stamp.src}
+            x={stamp.x}
+            y={stamp.y}
+            width={stamp.width}
+            height={stamp.height}
+          />
+        ))}
+      </Layer>
+    </Stage>
   );
 }
 

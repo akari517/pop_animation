@@ -6,6 +6,7 @@ import { Snackbar, Alert } from "@mui/material";
 import "./DetailScreen.css";
 import AnimationViewer from "./AnimationViewer";
 
+// Heart アイコン
 const HeartIcon = ({ liked, onClick }) => (
   <svg
     onClick={onClick}
@@ -23,6 +24,7 @@ const HeartIcon = ({ liked, onClick }) => (
   </svg>
 );
 
+// Share アイコン
 const ShareIcon = ({ onClick }) => (
   <svg
     onClick={onClick}
@@ -58,6 +60,7 @@ function DetailScreen() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [animations, setAnimations] = useState([]);
 
+  // 投稿といいねデータ取得
   const fetchWorkAndLikeData = useCallback(async () => {
     if (!workId) return;
     setLoading(true);
@@ -65,7 +68,7 @@ function DetailScreen() {
       const { data: workData, error: workError } = await supabase
         .from("works")
         .select(`*, work_genres ( genres ( genre_id, genre_name ) )`)
-        .eq("work_id", workId)
+        .eq("work_id", Number(workId))
         .single();
       if (workError) throw workError;
 
@@ -74,7 +77,7 @@ function DetailScreen() {
         const { data: likeData } = await supabase
           .from("likes")
           .select("work_id")
-          .match({ user_id: currentUser.id, work_id: workId })
+          .match({ user_id: currentUser.id, work_id: Number(workId) })
           .single();
         isLiked = !!likeData;
       }
@@ -100,20 +103,29 @@ function DetailScreen() {
     fetchAllGenres();
   }, [fetchWorkAndLikeData]);
 
+  // アニメーション取得
   useEffect(() => {
     const fetchAnimations = async () => {
-      const { data, error } = await supabase
-        .from("animations")
-        .select("animation_data, created_at, id")
-        .eq("work_id", workId)
-        .order("created_at", { ascending: false });
-      if (!error && Array.isArray(data)) {
-        setAnimations(data);
+      try {
+        const { data, error } = await supabase
+          .from("animations")
+          .select("animation_data, created_at, id")
+          .eq("work_id", Number(workId))
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("アニメーション取得エラー:", error);
+          return;
+        }
+        if (Array.isArray(data)) setAnimations(data);
+      } catch (e) {
+        console.error("アニメーション取得例外:", e);
       }
     };
     if (workId) fetchAnimations();
   }, [workId]);
 
+  // いいね
   const handleLike = async () => {
     if (!currentUser || !work) {
       alert("ログインが必要です。");
@@ -125,22 +137,17 @@ function DetailScreen() {
       const { error } = await supabase
         .from("likes")
         .delete()
-        .match({ user_id: currentUser.id, work_id: workId });
-      if (error) {
-        console.error("いいね解除エラー:", error);
-        setWork((prevWork) => ({ ...prevWork, liked: currentLikedStatus }));
-      }
+        .match({ user_id: currentUser.id, work_id: Number(workId) });
+      if (error) setWork((prev) => ({ ...prev, liked: currentLikedStatus }));
     } else {
       const { error } = await supabase
         .from("likes")
-        .insert([{ user_id: currentUser.id, work_id: workId }]);
-      if (error) {
-        console.error("いいね追加エラー:", error);
-        setWork((prevWork) => ({ ...prevWork, liked: currentLikedStatus }));
-      }
+        .insert([{ user_id: currentUser.id, work_id: Number(workId) }]);
+      if (error) setWork((prev) => ({ ...prev, liked: currentLikedStatus }));
     }
   };
 
+  // 共有
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -174,18 +181,18 @@ function DetailScreen() {
       const { error: updateError } = await supabase
         .from("works")
         .update({ title: editedTitle })
-        .eq("work_id", workId);
+        .eq("work_id", Number(workId));
       if (updateError) throw updateError;
 
       const { error: deleteError } = await supabase
         .from("work_genres")
         .delete()
-        .eq("work_id", workId);
+        .eq("work_id", Number(workId));
       if (deleteError) throw deleteError;
 
       if (selectedGenres.length > 0) {
         const newWorkGenres = selectedGenres.map((genreId) => ({
-          work_id: workId,
+          work_id: Number(workId),
           genre_id: genreId,
         }));
         const { error: insertError } = await supabase
@@ -219,10 +226,39 @@ function DetailScreen() {
     }
   };
 
-  if (loading) return <div className="detail-container"><p>読み込み中...</p></div>;
-  if (!work) return <div className="detail-container"><p>投稿が見つかりません。</p></div>;
+  if (loading)
+    return (
+      <div className="detail-container">
+        <p>読み込み中...</p>
+      </div>
+    );
+  if (!work)
+    return (
+      <div className="detail-container">
+        <p>投稿が見つかりません。</p>
+      </div>
+    );
 
   const isOwner = currentUser && currentUser.id === work.user_id;
+
+  // animationData を安全に構築
+  const animationData =
+    animations.length === 0
+      ? null
+      : (() => {
+          const firstAnimation = animations[0].animation_data;
+          const getShapes = (a) =>
+            typeof a.animation_data === "object"
+              ? a.animation_data.shapes || []
+              : typeof a.animation_data === "string"
+              ? JSON.parse(a.animation_data)?.shapes || []
+              : [];
+          return {
+            frames: animations.map((a) => getShapes(a)),
+            stamps: firstAnimation?.stamps || [],
+            selectedImage: firstAnimation?.selectedImage || null,
+          };
+        })();
 
   return (
     <div className="detail-container">
@@ -234,18 +270,14 @@ function DetailScreen() {
       </button>
 
       <div className="detail-card">
-        {animations.length === 0 ? (
-          <div>アニメーションがありません</div>
-        ) : (
+        {animationData ? (
           <AnimationViewer
-            animationData={{
-              shapes: animations.map(a => a.animation_data.shapes),
-              stamps: animations[0]?.animation_data?.stamps || [],
-              selectedImage: animations[0]?.animation_data?.selectedImage || null,
-            }}
+            animationData={animationData}
             width={600}
             height={400}
           />
+        ) : (
+          <div>アニメーションがありません</div>
         )}
 
         {isEditing ? (
