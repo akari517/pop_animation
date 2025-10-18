@@ -38,6 +38,12 @@ function StampScreen() {
     setSelectedStampId(null);
   }, []);
 
+  const toggleStampSelection = useCallback((id) => {
+    // すでに選択されている場合は解除し、そうでなければ選択する
+    setSelectedStampId(prevId => (prevId === id ? null : id));
+    setSelectedGif(null); // GIF追加モードを解除
+  }, []);
+
   // --- スタンプ追加 ---
   const handleAddStamp = useCallback((gif, position) => {
     const newStamp = {
