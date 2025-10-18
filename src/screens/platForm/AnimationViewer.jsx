@@ -1,46 +1,18 @@
 // src/components/AnimationViewer.jsx
 
 import React, { useState, useEffect } from "react";
-import { Stage, Layer, Line } from "react-konva";
+import { Stage, Layer, Line, Circle } from "react-konva";
 import { getLineProps } from "../../screens/animation/PenTools";
 import URLImage from "../../components/URLImage";
-import { supabase } from "../../supabaseClient";
 
 const FRAME_INTERVAL = 100;
 
-function AnimationViewer({ width = 600, height = 400, workId }) {
+function AnimationViewer({ width = 600, height = 400, animationData }) {
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
-  const [animationData, setAnimationData] = useState(null);
 
-  useEffect(() => {
-    if (!workId) return;
-    const fetchAnimation = async () => {
-      const { data, error } = await supabase
-        .from("animations")
-        .select("animation_data")
-        .eq("work_id", workId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        console.error("アニメーション取得エラー:", error);
-        setAnimationData(null);
-      } else if (!data) {
-        setAnimationData(null);
-      } else {
-        setAnimationData(data.animation_data || {});
-      }
-    };
-    fetchAnimation();
-  }, [workId]);
-
-  // shapes, stamps, selectedImage の分岐
   const shapes = animationData?.shapes || [];
-  const stamps = animationData?.stamps || [];
   const bgImage = animationData?.selectedImage || null;
 
-  // フレーム切り替え
   useEffect(() => {
     if (!Array.isArray(shapes) || shapes.length <= 1) return;
     const interval = setInterval(() => {
@@ -49,7 +21,6 @@ function AnimationViewer({ width = 600, height = 400, workId }) {
     return () => clearInterval(interval);
   }, [shapes.length]);
 
-  // 現在のフレーム
   const currentFrameShapes = Array.isArray(shapes[0])
     ? shapes[currentFrameIndex] || []
     : shapes;
@@ -77,9 +48,72 @@ function AnimationViewer({ width = 600, height = 400, workId }) {
         <Layer>
           {currentFrameShapes.map((shape, i) => {
             const props = getLineProps(shape);
+
+            // 風船ペン
+            if (shape.tool === "balloon" || props.balloon) {
+              return shape.points.reduce((arr, _, idx) => {
+                if (idx % 2 === 0) {
+                  arr.push(
+                    <Circle
+                      key={`balloon-${i}-${idx}`}
+                      x={shape.points[idx]}
+                      y={shape.points[idx + 1]}
+                      radius={6 + Math.random() * 6}
+                      fill={props.fill || shape.color}
+                      shadowBlur={props.shadowBlur || 8}
+                      shadowColor={props.shadowColor || "#fff"}
+                      opacity={props.opacity || 0.8}
+                    />
+                  );
+                }
+                return arr;
+              }, []);
+            }
+
+            // キラキラペン
+            if (shape.tool === "glitter") {
+              return (
+                <React.Fragment key={i}>
+                  <Line {...props} />
+                  {shape.points.reduce((arr, _, idx) => {
+                    if (idx % 2 === 0)
+                      arr.push(
+                        <Circle
+                          key={`g-${i}-${idx}`}
+                          x={shape.points[idx]}
+                          y={shape.points[idx + 1]}
+                          radius={Math.random() * 2 + 1}
+                          fill="#fffacd"
+                          opacity={Math.random()}
+                        />
+                      );
+                    return arr;
+                  }, [])}
+                </React.Fragment>
+              );
+            }
+
+            // ネオンペン
+            if (shape.tool === "neon") {
+              return (
+                <React.Fragment key={i}>
+                  <Line
+                    points={shape.points}
+                    stroke={shape.color}
+                    strokeWidth={12}
+                    lineCap="round"
+                    lineJoin="round"
+                    tension={0.5}
+                    opacity={0.4}
+                  />
+                  <Line {...props} />
+                </React.Fragment>
+              );
+            }
+
+            // その他
             return <Line key={i} {...props} />;
           })}
-          {/* stamps の描画も必要なら追加 */}
         </Layer>
       </Stage>
     </div>

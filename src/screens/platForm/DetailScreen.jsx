@@ -59,6 +59,7 @@ function DetailScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [showAnimation, setShowAnimation] = useState(false);
+  const [animations, setAnimations] = useState([]);
   // === データ取得処理 ===
   const fetchWorkAndLikeData = useCallback(async () => {
     if (!workId) return;
@@ -103,6 +104,21 @@ function DetailScreen() {
     };
     fetchAllGenres();
   }, [fetchWorkAndLikeData]);
+
+  // 追加：アニメーション一覧取得
+  useEffect(() => {
+    const fetchAnimations = async () => {
+      const { data, error } = await supabase
+        .from("animations")
+        .select("animation_data, created_at, id") // idは一意キー
+        .eq("work_id", workId)
+        .order("created_at", { ascending: false });
+      if (!error && Array.isArray(data)) {
+        setAnimations(data);
+      }
+    };
+    if (workId) fetchAnimations();
+  }, [workId]);
 
   // === イベントハンドラ ===
   const handleLike = async () => {
@@ -244,9 +260,23 @@ function DetailScreen() {
       </button>
 
       <div className="detail-card">
-        {/* アニメーションを常に表示 */}
-        <AnimationViewer workId={workId} width={600} height={400} />
-
+        {/* 作品ごとの全アニメーションを表示 */}
+        {animations.length === 0 ? (
+          <div>アニメーションがありません</div>
+        ) : (
+          animations.map((anim, idx) => (
+            <div key={anim.id || idx} style={{ marginBottom: 32 }}>
+              <AnimationViewer
+                animationData={anim.animation_data}
+                width={600}
+                height={400}
+              />
+              <div style={{ fontSize: "0.8em", color: "#888" }}>
+                {new Date(anim.created_at).toLocaleString()}
+              </div>
+            </div>
+          ))
+        )}
         {/* 編集フォームや作品情報はそのまま */}
         {isEditing ? (
           <div className="edit-form-container">

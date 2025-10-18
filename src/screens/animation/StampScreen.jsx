@@ -23,26 +23,14 @@ const GIF_ASSETS = [
   { src: star, name: "star", label: "星" },
 ];
 
-let stampCounter = 0;
-
 function StampScreen() {
   const stageSize = useStageSize(70);
-  const { selectedImage, stamps: ctxStamps, addStamp: ctxAddStamp, undoStamp: ctxUndoStamp, clearStamps: ctxClearStamps } = useContext(AnimationContext);
+  // AnimationContextからstamps, setStamps, selectedImageを取得
+  const { stamps, setStamps, selectedImage } = useContext(AnimationContext);
 
-  const [stamps, setStamps] = useState([]);
-  const [loadedFromContext, setLoadedFromContext] = useState(false);
+  // --- GIF選択 ---
   const [selectedGif, setSelectedGif] = useState(null);
   const [selectedStampId, setSelectedStampId] = useState(null);
-
-  const { handleDown, handleMove, endDrawing } = useDrawing([], "#0ff", "pen");
-
-  // --- 初回ロード時に Context から stamps を読み込む ---
-  useEffect(() => {
-    if (!loadedFromContext && ctxStamps && ctxStamps.length > 0) {
-      setStamps(ctxStamps);
-    }
-    setLoadedFromContext(true);
-  }, [ctxStamps, loadedFromContext]);
 
   // --- GIF選択 ---
   const handleGifSelect = useCallback((gif) => {
@@ -51,9 +39,9 @@ function StampScreen() {
   }, []);
 
   // --- スタンプ追加 ---
-  const addStamp = useCallback((gif, position) => {
+  const handleAddStamp = useCallback((gif, position) => {
     const newStamp = {
-      id: Date.now() + "_" + stampCounter++,
+      id: Date.now() + "_" + Math.random(),
       src: gif.src,
       name: gif.name,
       x: position.x - STAMP_DEFAULT_SIZE / 2,
@@ -61,56 +49,33 @@ function StampScreen() {
       width: STAMP_DEFAULT_SIZE,
       height: STAMP_DEFAULT_SIZE,
     };
+    // スタンプ追加
     setStamps(prev => [...prev, newStamp]);
     setSelectedGif(null);
-
-    // Context にも追加
-    if (ctxAddStamp) ctxAddStamp(newStamp);
-  }, [ctxAddStamp]);
-
-  // --- スタンプ選択トグル ---
-  const toggleStampSelection = useCallback((id) => {
-    setSelectedStampId(prev => (prev === id ? null : id));
-  }, []);
+  }, [setStamps]);
 
   // --- ステージクリック ---
   const handleStageClick = useCallback((e) => {
     const stage = e.target.getStage();
     const pointer = stage.getPointerPosition();
-
     if (selectedGif) {
-      addStamp(selectedGif, pointer);
+      handleAddStamp(selectedGif, pointer);
       return;
     }
     setSelectedStampId(null);
-    handleDown(e);
-  }, [selectedGif, addStamp, handleDown]);
+  }, [selectedGif, handleAddStamp]);
 
   // --- Undo ---
-  const undoLastStamp = useCallback(() => {
+  const handleUndoStamp = useCallback(() => {
     setStamps(prev => (prev.length > 0 ? prev.slice(0, -1) : prev));
     setSelectedStampId(null);
-    if (ctxUndoStamp) ctxUndoStamp();
-  }, [ctxUndoStamp]);
+  }, [setStamps]);
 
   // --- Clear ---
-  const clearAllStamps = useCallback(() => {
+  const handleClearStamps = useCallback(() => {
     setStamps([]);
     setSelectedStampId(null);
-    if (ctxClearStamps) ctxClearStamps();
-  }, [ctxClearStamps]);
-
-  // --- キーボード Ctrl/Cmd+Z ---
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-        e.preventDefault();
-        undoLastStamp();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undoLastStamp]);
+  }, [setStamps]);
 
   return (
     <div style={{ minHeight: "100vh", padding: "20px" }}>
@@ -120,8 +85,8 @@ function StampScreen() {
           gifs={GIF_ASSETS}
           selectedGif={selectedGif}
           onGifSelect={handleGifSelect}
-          onUndo={undoLastStamp}
-          onClear={clearAllStamps}
+          onUndo={handleUndoStamp}
+          onClear={handleClearStamps}
           canUndo={stamps.length > 0}
         />
         <div style={{ marginTop: "20px", borderRadius: "12px", overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.1)", border: "3px solid #e0e0e0" }}>
@@ -129,11 +94,7 @@ function StampScreen() {
             width={stageSize.width}
             height={stageSize.height}
             onMouseDown={handleStageClick}
-            onMouseMove={handleMove}
-            onMouseUp={endDrawing}
             onTouchStart={handleStageClick}
-            onTouchMove={handleMove}
-            onTouchEnd={endDrawing}
             style={{ cursor: selectedGif ? "crosshair" : "default", display: "block" }}
           >
             <Layer>
@@ -228,5 +189,4 @@ function ActionButton({ onClick, disabled, icon, label, hotkey, variant = "prima
 function StatusBar({ stampCount }) {
   return <div style={{ marginTop: "16px", padding: "12px 16px", background: "#f8f9fa", borderRadius: "8px", fontSize: "13px", color: "#6c757d" }}>スタンプ数: {stampCount}</div>;
 }
-
 export default StampScreen;
