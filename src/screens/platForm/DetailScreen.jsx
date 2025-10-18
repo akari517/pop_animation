@@ -6,7 +6,6 @@ import { Snackbar, Alert } from "@mui/material";
 import "./DetailScreen.css";
 import AnimationViewer from "./AnimationViewer";
 
-// アイコンコンポーネント
 const HeartIcon = ({ liked, onClick }) => (
   <svg
     onClick={onClick}
@@ -48,7 +47,6 @@ function DetailScreen() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
-  // === State管理 ===
   const [work, setWork] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showEditOptions, setShowEditOptions] = useState(false);
@@ -58,9 +56,8 @@ function DetailScreen() {
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [showAnimation, setShowAnimation] = useState(false);
   const [animations, setAnimations] = useState([]);
-  // === データ取得処理 ===
+
   const fetchWorkAndLikeData = useCallback(async () => {
     if (!workId) return;
     setLoading(true);
@@ -86,9 +83,7 @@ function DetailScreen() {
       setEditedTitle(workData.title);
       setSelectedGenres(workData.work_genres.map((wg) => wg.genres.genre_id));
     } catch (error) {
-      if (error.code !== "PGRST116") {
-        console.error("投稿データの取得エラー:", error);
-      }
+      console.error("投稿データ取得エラー:", error);
       setWork(null);
     } finally {
       setLoading(false);
@@ -105,12 +100,11 @@ function DetailScreen() {
     fetchAllGenres();
   }, [fetchWorkAndLikeData]);
 
-  // 追加：アニメーション一覧取得
   useEffect(() => {
     const fetchAnimations = async () => {
       const { data, error } = await supabase
         .from("animations")
-        .select("animation_data, created_at, id") // idは一意キー
+        .select("animation_data, created_at, id")
         .eq("work_id", workId)
         .order("created_at", { ascending: false });
       if (!error && Array.isArray(data)) {
@@ -120,10 +114,9 @@ function DetailScreen() {
     if (workId) fetchAnimations();
   }, [workId]);
 
-  // === イベントハンドラ ===
   const handleLike = async () => {
     if (!currentUser || !work) {
-      alert("いいねをするにはログインが必要です。");
+      alert("ログインが必要です。");
       return;
     }
     const currentLikedStatus = work.liked;
@@ -149,23 +142,16 @@ function DetailScreen() {
   };
 
   const handleShare = async () => {
-    const currentUrl = window.location.href;
     try {
-      await navigator.clipboard.writeText(currentUrl);
-      // alertの代わりにSnackbarを表示する
+      await navigator.clipboard.writeText(window.location.href);
       setSnackbarOpen(true);
-    } catch (error) {
-      console.error("URLのコピーに失敗しました:", error);
-      // エラー時はアラートを出すか、別のSnackbarを出すことも可能
+    } catch {
       alert("URLのコピーに失敗しました。");
     }
   };
 
-  // Snackbarを閉じるための関数
   const handleSnackbarClose = (event, reason) => {
-    if (reason === "clickaway") {
-      return;
-    }
+    if (reason === "clickaway") return;
     setSnackbarOpen(false);
   };
 
@@ -207,10 +193,10 @@ function DetailScreen() {
           .insert(newWorkGenres);
         if (insertError) throw insertError;
       }
+
       alert("更新が完了しました。");
       setIsEditing(false);
 
-      // 手動でstateを更新（再取得より高速）
       const updatedGenresForState = allGenres
         .filter((genre) => selectedGenres.includes(genre.genre_id))
         .map((genre) => ({
@@ -219,6 +205,7 @@ function DetailScreen() {
             genre_name: genre.genre_name,
           },
         }));
+
       setWork((prevWork) => ({
         ...prevWork,
         title: editedTitle,
@@ -232,21 +219,8 @@ function DetailScreen() {
     }
   };
 
-  // === レンダリング処理 ===
-  if (loading) {
-    return (
-      <div className="detail-container">
-        <p>読み込み中...</p>
-      </div>
-    );
-  }
-  if (!work) {
-    return (
-      <div className="detail-container">
-        <p>投稿が見つかりません。</p>
-      </div>
-    );
-  }
+  if (loading) return <div className="detail-container"><p>読み込み中...</p></div>;
+  if (!work) return <div className="detail-container"><p>投稿が見つかりません。</p></div>;
 
   const isOwner = currentUser && currentUser.id === work.user_id;
 
@@ -260,24 +234,20 @@ function DetailScreen() {
       </button>
 
       <div className="detail-card">
-        {/* 作品ごとの全アニメーションを表示 */}
         {animations.length === 0 ? (
           <div>アニメーションがありません</div>
         ) : (
-          animations.map((anim, idx) => (
-            <div key={anim.id || idx} style={{ marginBottom: 32 }}>
-              <AnimationViewer
-                animationData={anim.animation_data}
-                width={600}
-                height={400}
-              />
-              <div style={{ fontSize: "0.8em", color: "#888" }}>
-                {new Date(anim.created_at).toLocaleString()}
-              </div>
-            </div>
-          ))
+          <AnimationViewer
+            animationData={{
+              shapes: animations.map(a => a.animation_data.shapes),
+              stamps: animations[0]?.animation_data?.stamps || [],
+              selectedImage: animations[0]?.animation_data?.selectedImage || null,
+            }}
+            width={600}
+            height={400}
+          />
         )}
-        {/* 編集フォームや作品情報はそのまま */}
+
         {isEditing ? (
           <div className="edit-form-container">
             <input
@@ -337,7 +307,6 @@ function DetailScreen() {
         )}
       </div>
 
-      {/* showEditOptions や Snackbar などはそのまま */}
       {showEditOptions && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -355,15 +324,16 @@ function DetailScreen() {
           </div>
         </div>
       )}
+
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={3000} // 3秒後に自動で閉じる
+        autoHideDuration={3000}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }} // 画面下部中央に表示
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert
           onClose={handleSnackbarClose}
-          severity="success" // 緑色の「成功」スタイル
+          severity="success"
           sx={{ width: "100%" }}
         >
           URLをクリップボードにコピーしました！

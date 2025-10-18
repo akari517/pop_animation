@@ -1,49 +1,86 @@
-// src/components/AnimationViewer.jsx
-
-import React, { useState, useEffect } from "react";
-import { Stage, Layer, Line, Circle, Image as KonvaImage } from "react-konva";
+import React, { useState, useEffect, useRef } from "react";
+import { Stage, Layer, Line, Image as KonvaImage } from "react-konva";
 import { getLineProps } from "../../screens/animation/PenTools";
 import URLImage from "../../components/URLImage";
 
-const FRAME_INTERVAL = 100;
+// スタンプ用コンポーネント
+function StampImage({ src, x, y, width, height }) {
+  const [image, setImage] = useState(null);
+  useEffect(() => {
+    if (!src) {
+      setImage(null);
+      return;
+    }
+    const img = new window.Image();
+    img.crossOrigin = "Anonymous";
+    img.src = src;
+    img.onload = () => setImage(img);
+    img.onerror = () => setImage(null);
+  }, [src]);
+  return image ? (
+    <KonvaImage image={image} x={x} y={y} width={width} height={height} />
+  ) : null;
+}
+
+const DEFAULT_FPS = 10;
 
 function AnimationViewer({ width = 600, height = 400, animationData }) {
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
+  const rafRef = useRef(null);
+  const lastTimeRef = useRef(0);
 
-  const shapes = animationData?.shapes || [];
+  // shapesをフレーム配列に正規化
+  const frames = (() => {
+    if (!animationData) return [];
+    if (Array.isArray(animationData.frames)) return animationData.frames;
+    if (Array.isArray(animationData.shapes) && Array.isArray(animationData.shapes[0])) {
+      return animationData.shapes;
+    }
+    if (Array.isArray(animationData.shapes)) return [animationData.shapes];
+    return [];
+  })();
+
   const stamps = animationData?.stamps || [];
   const bgImage = animationData?.selectedImage || null;
+  const fps = animationData?.frameRate || DEFAULT_FPS;
+  const frameIntervalMs = 1000 / fps;
 
   useEffect(() => {
-    if (!Array.isArray(shapes) || shapes.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentFrameIndex((prev) => (prev + 1) % shapes.length);
-    }, FRAME_INTERVAL);
-    return () => clearInterval(interval);
-  }, [shapes.length]);
+    setCurrentFrameIndex(0);
+  }, [frames.length]);
 
-  const currentFrameShapes = Array.isArray(shapes[0])
-    ? shapes[currentFrameIndex] || []
-    : shapes;
+  useEffect(() => {
+    if (!frames || frames.length <= 1) return;
+
+    const step = (time) => {
+      if (!lastTimeRef.current) lastTimeRef.current = time;
+      const delta = time - lastTimeRef.current;
+      if (delta >= frameIntervalMs) {
+        setCurrentFrameIndex((prev) => (prev + 1) % frames.length);
+        lastTimeRef.current = time;
+      }
+      rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      lastTimeRef.current = 0;
+    };
+  }, [frames.length, frameIntervalMs]);
+
+  const currentFrameShapes = frames[currentFrameIndex] || [];
 
   if (!animationData || !Array.isArray(currentFrameShapes)) {
     return <div>アニメーションがありません</div>;
   }
-
-  console.log("animationData", animationData);
 
   return (
     <div>
       <Stage width={width} height={height}>
         <Layer>
           {bgImage && (
-            <URLImage
-              src={bgImage}
-              width={width}
-              height={height}
-              x={0}
-              y={0}
-            />
+            <URLImage src={bgImage} width={width} height={height} x={0} y={0} />
           )}
         </Layer>
         <Layer>
@@ -66,19 +103,6 @@ function AnimationViewer({ width = 600, height = 400, animationData }) {
       </Stage>
     </div>
   );
-}
-
-// StampImageコンポーネントを追加
-function StampImage({ src, x, y, width, height }) {
-  const [image, setImage] = useState(null);
-  useEffect(() => {
-    const img = new window.Image();
-    img.src = src;
-    img.onload = () => setImage(img);
-  }, [src]);
-  return image ? (
-    <KonvaImage image={image} x={x} y={y} width={width} height={height} />
-  ) : null;
 }
 
 export default AnimationViewer;
