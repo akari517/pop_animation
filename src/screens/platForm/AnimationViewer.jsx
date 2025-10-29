@@ -1,87 +1,57 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Stage, Layer, Line, Image as KonvaImage } from "react-konva";
-import { getLineProps } from "../../screens/animation/PenTools";
-import URLImage from "../../components/URLImage";
 
-function StampImage({ src, x, y, width, height }) {
-  const [image, setImage] = useState(null);
-  useEffect(() => {
-    if (!src) {
-      setImage(null);
-      return;
-    }
-    const img = new window.Image();
-    img.crossOrigin = "Anonymous";
-    img.src = src;
-    img.onload = () => setImage(img);
-    img.onerror = () => setImage(null);
-  }, [src]);
-  return image ? (
-    <KonvaImage image={image} x={x} y={y} width={width} height={height} />
-  ) : null;
-}
+import React from "react";
+import { Stage, Layer, Line, Image } from "react-konva";
+import useImage from "use-image";
 
-const DEFAULT_FPS = 10;
+const AnimationViewer = ({ animationData, width, height }) => {
+  const frames = animationData.frames || animationData.shapes || [];
+  const stamps = animationData.stamps || [];
+  const selectedImage = animationData.selectedImage || null;
+  const savedWidth = animationData.savedWidth || width;
+  const savedHeight = animationData.savedHeight || height;
 
-function AnimationViewer({ width = 600, height = 400, animationData }) {
-  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
-  const rafRef = useRef(null);
-  const lastTimeRef = useRef(0);
+  const [bgImage] = useImage(selectedImage);
 
-  const frames = animationData?.frames || [];
-  const stamps = animationData?.stamps || [];
-  const bgImage = animationData?.selectedImage || null;
-  const fps = animationData?.frameRate || DEFAULT_FPS;
-  const frameIntervalMs = 1000 / fps;
+  // スケール計算
+  const scaleX = width / savedWidth;
+  const scaleY = height / savedHeight;
+  const scale = Math.min(scaleX, scaleY);
 
-  useEffect(() => setCurrentFrameIndex(0), [frames.length]);
-
-  useEffect(() => {
-    if (!frames || frames.length <= 1) return;
-
-    const step = (time) => {
-      if (!lastTimeRef.current) lastTimeRef.current = time;
-      const delta = time - lastTimeRef.current;
-      if (delta >= frameIntervalMs) {
-        setCurrentFrameIndex((prev) => (prev + 1) % frames.length);
-        lastTimeRef.current = time;
-      }
-      rafRef.current = requestAnimationFrame(step);
-    };
-    rafRef.current = requestAnimationFrame(step);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      lastTimeRef.current = 0;
-    };
-  }, [frames.length, frameIntervalMs]);
-
-  const currentFrameShapes = frames[currentFrameIndex] || [];
-
-  if (!frames.length) return <div>アニメーションがありません</div>;
+  // ステージ中央に合わせるオフセット
+  const offsetX = (width - savedWidth * scale) / 2;
+  const offsetY = (height - savedHeight * scale) / 2;
 
   return (
     <Stage width={width} height={height}>
-      <Layer>
-        {bgImage && <URLImage src={bgImage} width={width} height={height} x={0} y={0} />}
-      </Layer>
-      <Layer>
-        {currentFrameShapes.map((shape, i) => {
-          const props = getLineProps(shape);
-          return <Line key={i} {...props} />;
-        })}
-        {stamps.map((stamp, idx) => (
-          <StampImage
-            key={stamp.id || idx}
-            src={stamp.src}
-            x={stamp.x}
-            y={stamp.y}
-            width={stamp.width}
-            height={stamp.height}
+      <Layer x={offsetX} y={offsetY} scale={{ x: scale, y: scale }}>
+        {bgImage && (
+          <Image image={bgImage} x={0} y={0} width={savedWidth} height={savedHeight} />
+        )}
+        {frames.map((shape, i) => (
+          <Line
+            key={i}
+            points={shape.points || []}
+            stroke={shape.color || "#000"}
+            strokeWidth={2}
+            lineCap="round"
+            lineJoin="round"
           />
+        ))}
+        {stamps.map((stamp, i) => (
+          stamp.image ? (
+            <Image
+              key={i}
+              image={stamp.image}
+              x={stamp.x}
+              y={stamp.y}
+              width={stamp.width}
+              height={stamp.height}
+            />
+          ) : null
         ))}
       </Layer>
     </Stage>
   );
-}
+};
 
 export default AnimationViewer;

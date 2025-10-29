@@ -43,54 +43,58 @@ export const AnimationProvider = ({ children }) => {
   };
 
   // ----------------- 保存 -----------------
-  const saveAnimation = async () => {
-    if (!workIdState) {
-      // 新規作成
-      const { data, error } = await supabase
-        .from("animations")
-        .insert([{
-          animation_data: {
-            shapes: currentShapes,
-            stamps,
-            selectedImage,
-            frame: activeFrame,             
-            simpleFrameColor,  
-          },
+  const saveAnimation = async (stageWidth, stageHeight) => {
+  const animationData = {
+    frames: [currentShapes], // ← ここを frames として保存
+    stamps,
+    selectedImage,
+    savedWidth: stageWidth,   // ← ここを追加
+    savedHeight: stageHeight, // ← ここを追加
+    frame: activeFrame,
+    simpleFrameColor,
+  };
+
+  if (!workIdState) {
+    // 新規作成
+    const { data, error } = await supabase
+      .from("animations")
+      .insert([
+        {
+          animation_data: animationData,
           created_at: new Date().toISOString(),
-        }])
-        .select()
-        .single();
-      if (error) {
-        console.error("保存失敗:", error);
-        alert("保存に失敗しました");
-        return;
-      }
-      setWorkId(data.work_id);
-      alert("保存しました！（新規作成）");
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("保存失敗:", error);
+      alert("保存に失敗しました");
       return;
     }
 
-    // 追記・上書き
+    setWorkId(data.work_id);
+    alert("保存しました！（新規作成）");
+  } else {
+    // 更新
     const { error } = await supabase
       .from("animations")
-      .insert([{
-        work_id: workIdState,
-        animation_data: {
-          shapes: currentShapes,
-          stamps,
-          selectedImage,
-          frame: activeFrame,             
-          simpleFrameColor,               
+      .insert([
+        {
+          work_id: workIdState,
+          animation_data: animationData,
+          created_at: new Date().toISOString(),
         },
-        created_at: new Date().toISOString(),
-      }]);
+      ]);
+
     if (error) {
       console.error("保存失敗:", error);
       alert("保存に失敗しました");
     } else {
       alert("保存しました！（更新）");
     }
-  };
+  }
+};
   // ----------------- ロード -----------------
   const loadAnimation = async (id) => {
     if (!id) return;
