@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useContext } from "react";
-import "./ViewingScreen.css";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../../SupabaseClient";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
 import { Snackbar, Alert } from "@mui/material";
-// アイコンコンポーネント
+import "./ViewingScreen.css";
+
+// Heart アイコン
 const HeartIcon = ({ liked, onClick }) => (
   <svg
     onClick={onClick}
@@ -18,10 +19,11 @@ const HeartIcon = ({ liked, onClick }) => (
     strokeLinejoin="round"
     style={{ cursor: "pointer" }}
   >
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </svg>
 );
 
+// Share アイコン
 const ShareIcon = ({ onClick }) => (
   <svg
     onClick={onClick}
@@ -35,9 +37,9 @@ const ShareIcon = ({ onClick }) => (
     strokeLinejoin="round"
     style={{ cursor: "pointer" }}
   >
-    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
-    <path d="M16 3h5v5"></path>
-    <path d="M10 14L21 3"></path>
+    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7" />
+    <path d="M16 3h5v5" />
+    <path d="M10 14L21 3" />
   </svg>
 );
 
@@ -46,111 +48,110 @@ function ViewingScreen() {
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      try {
+        // 投稿取得
+        const { data: worksData, error: worksError } = await supabase
+          .from("works")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-      // 1. 全ての投稿をworksテーブルから取得
-      const { data: worksData, error: worksError } = await supabase
-        .from("works")
-        .select("*")
-        .order("created_at", { ascending: false });
+        if (worksError) throw worksError;
 
-      if (worksError) {
-        console.error("投稿の取得エラー:", worksError);
-        setLoading(false);
-        return;
-      }
+        let likedWorkIds = new Set();
 
-      let likedWorkIds = new Set(); // IDの検索を高速化するためSetを使用
+        if (currentUser) {
+          const { data: userLikes, error: likesError } = await supabase
+            .from("likes")
+            .select("work_id")
+            .eq("user_id", currentUser.id);
 
-      // 2. ログインしている場合のみ、いいね情報を取得してSetに追加
-      if (currentUser) {
-        const { data: userLikes, error: likesError } = await supabase
-          .from("likes")
-          .select("work_id")
-          .eq("user_id", currentUser.id);
-
-        if (likesError) {
-          console.error("いいね情報の取得エラー:", likesError);
-        } else if (userLikes) {
-          likedWorkIds = new Set(userLikes.map((like) => like.work_id));
+          if (likesError) {
+            console.error("いいね情報取得エラー:", likesError);
+          } else if (userLikes) {
+            likedWorkIds = new Set(userLikes.map((like) => like.work_id));
+          }
         }
+
+        const mergedWorks = (worksData || []).map((work) => ({
+          ...work,
+          liked: likedWorkIds.has(work.work_id),
+        }));
+
+        setWorks(mergedWorks);
+      } catch (error) {
+        console.error("投稿取得エラー:", error);
+      } finally {
+        setLoading(false);
       }
-
-      // 3. ログイン状態に関わらず、一度だけ投稿データにいいね情報をマージ
-      const mergedWorks = worksData.map((work) => ({
-        ...work,
-        liked: likedWorkIds.has(work.work_id),
-      }));
-      setWorks(mergedWorks);
-
-      setLoading(false);
     };
 
     fetchData();
   }, [currentUser]);
 
-  // いいねボタンの処理
+  // いいね
   const handleLike = async (event, workId, currentLikedStatus) => {
     event.preventDefault();
     if (!currentUser) {
-      alert("いいねをするにはログインが必要です。");
+      alert("ログインが必要です。");
       return;
     }
 
-    // UIを即時更新
-    setWorks(
-      works.map((work) =>
-        work.work_id === workId ? { ...work, liked: !work.liked } : work
+    setWorks((prevWorks) =>
+      prevWorks.map((work) =>
+        work.work_id === workId ? { ...work, liked: !currentLikedStatus } : work
       )
     );
 
-    if (currentLikedStatus) {
-      // いいね解除
-      await supabase
-        .from("likes")
-        .delete()
-        .match({ user_id: currentUser.id, work_id: workId });
-    } else {
-      // いいね追加
-      await supabase
-        .from("likes")
-        .insert([{ user_id: currentUser.id, work_id: workId }]);
+    try {
+      if (currentLikedStatus) {
+        await supabase.from("likes").delete().match({
+          user_id: currentUser.id,
+          work_id: workId,
+        });
+      } else {
+        await supabase
+          .from("likes")
+          .insert([{ user_id: currentUser.id, work_id: workId }]);
+      }
+    } catch (error) {
+      console.error("いいね処理エラー:", error);
+      // UI戻す
+      setWorks((prevWorks) =>
+        prevWorks.map((work) =>
+          work.work_id === workId ? { ...work, liked: currentLikedStatus } : work
+        )
+      );
     }
   };
 
+  // 共有
   const handleShare = async (event, workId) => {
-    event.preventDefault(); // リンクへの遷移を防ぐ
-
-    // 投稿詳細ページの完全なURLを生成
+    event.preventDefault();
     const postUrl = `${window.location.origin}/work/${workId}`;
-
     try {
       await navigator.clipboard.writeText(postUrl);
-      // alertの代わりにSnackbarを表示する
       setSnackbarOpen(true);
     } catch (error) {
-      console.error("URLのコピーに失敗しました:", error);
+      console.error("URLコピー失敗:", error);
       alert("URLのコピーに失敗しました。");
     }
   };
 
-  // Snackbarを閉じるための関数
   const handleSnackbarClose = (event, reason) => {
-    if (reason === "clickaway") {
-      return;
-    }
+    if (reason === "clickaway") return;
     setSnackbarOpen(false);
   };
 
-  if (loading) {
+  if (loading)
     return (
       <div className="screen-container">
         <p>読み込み中...</p>
       </div>
     );
-  }
 
   return (
     <div className="feed-container">
@@ -160,19 +161,17 @@ function ViewingScreen() {
           key={work.work_id}
           className="work-card-link"
         >
-          <div key={work.work_id} className="image-card">
+          <div className="image-card">
             <img src={work.url} alt={work.title} className="feed-image" />
             <div className="actions-container">
               <p className="work-title">{work.title}</p>
               <div className="icon-buttons">
                 <ShareIcon
-                  onClick={(event) => handleShare(event, work.work_id)}
+                  onClick={(e) => handleShare(e, work.work_id)}
                 />
                 <HeartIcon
                   liked={work.liked}
-                  onClick={(event) =>
-                    handleLike(event, work.work_id, work.liked)
-                  }
+                  onClick={(e) => handleLike(e, work.work_id, work.liked)}
                 />
               </div>
             </div>

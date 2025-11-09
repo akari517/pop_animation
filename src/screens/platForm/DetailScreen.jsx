@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../SupabaseClient";
 import { useAuth } from "../../context/AuthContext";
@@ -20,7 +20,7 @@ const HeartIcon = ({ liked, onClick }) => (
     strokeLinejoin="round"
     style={{ cursor: "pointer" }}
   >
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </svg>
 );
 
@@ -38,9 +38,9 @@ const ShareIcon = ({ onClick }) => (
     strokeLinejoin="round"
     style={{ cursor: "pointer" }}
   >
-    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
-    <path d="M16 3h5v5"></path>
-    <path d="M10 14L21 3"></path>
+    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7" />
+    <path d="M16 3h5v5" />
+    <path d="M10 14L21 3" />
   </svg>
 );
 
@@ -84,7 +84,9 @@ function DetailScreen() {
 
       setWork({ ...workData, liked: isLiked });
       setEditedTitle(workData.title);
-      setSelectedGenres(workData.work_genres.map((wg) => wg.genres.genre_id));
+      setSelectedGenres(
+        (workData.work_genres || []).map((wg) => wg.genres.genre_id)
+      );
     } catch (error) {
       console.error("投稿データ取得エラー:", error);
       setWork(null);
@@ -106,6 +108,7 @@ function DetailScreen() {
   // アニメーション取得
   useEffect(() => {
     const fetchAnimations = async () => {
+      if (!workId) return;
       try {
         const { data, error } = await supabase
           .from("animations")
@@ -122,7 +125,7 @@ function DetailScreen() {
         console.error("アニメーション取得例外:", e);
       }
     };
-    if (workId) fetchAnimations();
+    fetchAnimations();
   }, [workId]);
 
   // いいね
@@ -133,6 +136,7 @@ function DetailScreen() {
     }
     const currentLikedStatus = work.liked;
     setWork((prevWork) => ({ ...prevWork, liked: !currentLikedStatus }));
+
     if (currentLikedStatus) {
       const { error } = await supabase
         .from("likes")
@@ -241,48 +245,37 @@ function DetailScreen() {
 
   const isOwner = currentUser && currentUser.id === work.user_id;
 
-  // animationData の構築（修正版）
-  const animationData =
-    animations.length === 0
-      ? null
-      : (() => {
-          const getShapes = (a) => {
-            if (!a.animation_data) return [];
-            if (typeof a.animation_data === "object") return a.animation_data.shapes || [];
-            if (typeof a.animation_data === "string") {
-              try {
-                return JSON.parse(a.animation_data)?.shapes || [];
-              } catch {
-                return [];
-              }
-            }
-            return [];
-          };
+  // animationData の構築
+  let animationData = null;
+  if (animations.length > 0) {
+    const firstAnimation = animations[0].animation_data;
+    const frames = [];
+    let stamps = [];
+    let selectedImage = null;
+    let savedWidth = 600;
+    let savedHeight = 400;
 
-          const frames = animations.flatMap((a) => getShapes(a)); // ← ここでフラット化
-          const firstAnimation = animations[0].animation_data;
+    animations.forEach((a) => {
+      if (!a.animation_data) return;
+      let shapes = [];
+      if (typeof a.animation_data === "object") shapes = a.animation_data.shapes || [];
+      else if (typeof a.animation_data === "string") {
+        try {
+          shapes = JSON.parse(a.animation_data).shapes || [];
+        } catch {}
+      }
+      frames.push(...shapes);
+    });
 
-          const stamps =
-            typeof firstAnimation === "object"
-              ? firstAnimation.stamps || []
-              : [];
+    if (typeof firstAnimation === "object") {
+      stamps = firstAnimation.stamps || [];
+      selectedImage = firstAnimation.selectedImage || null;
+      savedWidth = firstAnimation.savedWidth || 600;
+      savedHeight = firstAnimation.savedHeight || 400;
+    }
 
-          const selectedImage =
-            typeof firstAnimation === "object"
-              ? firstAnimation.selectedImage || null
-              : null;
-
-          const savedWidth =
-            typeof firstAnimation === "object"
-              ? firstAnimation.savedWidth || 600
-              : 600;
-          const savedHeight =
-            typeof firstAnimation === "object"
-              ? firstAnimation.savedHeight || 400
-              : 400;
-
-          return { frames, stamps, selectedImage, savedWidth, savedHeight };
-        })();
+    animationData = { frames, stamps, selectedImage, savedWidth, savedHeight };
+  }
 
   return (
     <div className="detail-container">
@@ -338,7 +331,7 @@ function DetailScreen() {
             {work.work_genres && work.work_genres.length > 0 && (
               <div className="genres-container">
                 {work.work_genres.map(({ genres }) => (
-                  <span key={genres.genre_name} className="genre-tag">
+                  <span key={genres.genre_id} className="genre-tag">
                     #{genres.genre_name}
                   </span>
                 ))}

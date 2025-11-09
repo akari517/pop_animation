@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef ,useContext} from "react";
+import React, { useState, useEffect, useRef ,useContext, useCallback } from "react";
 import { Stage, Layer, Line, Circle } from "react-konva";
 import { AnimationContext } from "../../context/AnimationContext";
 import useImage from "use-image";
