@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import "./ViewingScreen.css";
-import { supabase } from "../../supabaseClient";
+import { supabase } from "../../SupabaseClient";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
 import { Snackbar, Alert } from "@mui/material";

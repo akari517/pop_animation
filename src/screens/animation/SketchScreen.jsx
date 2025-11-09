@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Stage, Layer, Line, Circle, Image } from "react-konva";
+import React, { useState, useEffect, useRef ,useContext} from "react";
+import { Stage, Layer, Line, Circle } from "react-konva";
+import { AnimationContext } from "../../context/AnimationContext";
 import useImage from "use-image";
 import {
   Box,
@@ -25,6 +26,25 @@ const SketchScreen = () => {
 
 
   const stageSize = useStageSize();
+  const { 
+    selectedImage, 
+    stamps, 
+    currentShapes,
+    pushShapeHistory,
+    color: contextColor,
+    setColor: setContextColor,
+    tool: contextTool,
+    setTool: setContextTool 
+  } = useContext(AnimationContext);
+
+  // ペンの種類
+  const penTools = [
+    { id: "pen", label: "通常ペン" },
+    { id: "neon", label: "ネオンペン" },
+    { id: "transparent", label: "透明ペン" },
+    { id: "circle", label: "丸ペン" },
+    { id: "eraser", label: "消しゴム" },
+  ];
 
   // 描画開始
   const startDrawing = (pos) => {
@@ -269,14 +289,5 @@ const SketchScreen = () => {
     </Box>
   );
 };
-import React from "react";
 
-function SketchScreen() {
-  return (
-    <div className="screen-container">
-      <h1>落書き画面</h1>
-      <p>この画面は現在準備中です。</p>
-    </div>
-  );
-}
 export default SketchScreen;

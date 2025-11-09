@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { createContext, useState, useEffect, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../../supabaseClient";
+import { supabase } from "../../SupabaseClient";
 import { useAuth } from "../../context/AuthContext";
 import { Snackbar, Alert } from "@mui/material";
 import "./DetailScreen.css";
@@ -241,23 +241,47 @@ function DetailScreen() {
 
   const isOwner = currentUser && currentUser.id === work.user_id;
 
-  // animationData を安全に構築
+  // animationData の構築（修正版）
   const animationData =
     animations.length === 0
       ? null
       : (() => {
-          const firstAnimation = animations[0].animation_data;
-          const getShapes = (a) =>
-            typeof a.animation_data === "object"
-              ? a.animation_data.shapes || []
-              : typeof a.animation_data === "string"
-              ? JSON.parse(a.animation_data)?.shapes || []
-              : [];
-          return {
-            frames: animations.map((a) => getShapes(a)),
-            stamps: firstAnimation?.stamps || [],
-            selectedImage: firstAnimation?.selectedImage || null,
+          const getShapes = (a) => {
+            if (!a.animation_data) return [];
+            if (typeof a.animation_data === "object") return a.animation_data.shapes || [];
+            if (typeof a.animation_data === "string") {
+              try {
+                return JSON.parse(a.animation_data)?.shapes || [];
+              } catch {
+                return [];
+              }
+            }
+            return [];
           };
+
+          const frames = animations.flatMap((a) => getShapes(a)); // ← ここでフラット化
+          const firstAnimation = animations[0].animation_data;
+
+          const stamps =
+            typeof firstAnimation === "object"
+              ? firstAnimation.stamps || []
+              : [];
+
+          const selectedImage =
+            typeof firstAnimation === "object"
+              ? firstAnimation.selectedImage || null
+              : null;
+
+          const savedWidth =
+            typeof firstAnimation === "object"
+              ? firstAnimation.savedWidth || 600
+              : 600;
+          const savedHeight =
+            typeof firstAnimation === "object"
+              ? firstAnimation.savedHeight || 400
+              : 400;
+
+          return { frames, stamps, selectedImage, savedWidth, savedHeight };
         })();
 
   return (
