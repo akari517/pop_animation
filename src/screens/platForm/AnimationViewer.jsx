@@ -46,7 +46,7 @@ function AnimationViewer({ animationData, width, height }) {
 const offsetY = (height - savedHeight * scale) / 2;
 console.log("offsetX:", offsetX, "width:", width, "savedWidth:", savedWidth, "scale:", scale);
 
-//
+//変更
   // --- 内部コンポーネント ---
   function BackgroundImage({ src }) {
     const [image, setImage] = useState(null);
