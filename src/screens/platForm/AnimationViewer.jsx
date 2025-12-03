@@ -84,11 +84,9 @@ console.log("offsetX:", offsetX, "width:", width, "savedWidth:", savedWidth, "sc
       />
     ) : null;
   }
-  // -------------------------
 
   return (
     <Stage width={width} height={height}>
-      {/* 🌟 Layer全体にスケールとオフセットを適用 🌟 */}
       <Layer x={offsetX} y={offsetY} scale={{ x: scale, y: scale }}>
         {bgImageSrc && <BackgroundImage src={bgImageSrc} />}
         {Array.isArray(shapes) &&
