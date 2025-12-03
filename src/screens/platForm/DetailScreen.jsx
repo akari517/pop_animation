@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../../SupabaseClient";
+import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../context/AuthContext";
 import { Snackbar, Alert } from "@mui/material";
-import "./DetailScreen.css";
 import AnimationViewer from "./AnimationViewer";
+import "./DetailScreen.css";
 
-// Heart アイコン
 const HeartIcon = ({ liked, onClick }) => (
   <svg
     onClick={onClick}
@@ -20,11 +19,10 @@ const HeartIcon = ({ liked, onClick }) => (
     strokeLinejoin="round"
     style={{ cursor: "pointer" }}
   >
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
   </svg>
 );
 
-// Share アイコン
 const ShareIcon = ({ onClick }) => (
   <svg
     onClick={onClick}
@@ -38,9 +36,9 @@ const ShareIcon = ({ onClick }) => (
     strokeLinejoin="round"
     style={{ cursor: "pointer" }}
   >
-    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7" />
-    <path d="M16 3h5v5" />
-    <path d="M10 14L21 3" />
+    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
+    <path d="M16 3h5v5"></path>
+    <path d="M10 14L21 3"></path>
   </svg>
 );
 
@@ -51,23 +49,16 @@ function DetailScreen() {
 
   const [work, setWork] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showEditOptions, setShowEditOptions] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedTitle, setEditedTitle] = useState("");
-  const [allGenres, setAllGenres] = useState([]);
-  const [selectedGenres, setSelectedGenres] = useState([]);
-  const [isSaving, setIsSaving] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [animations, setAnimations] = useState([]);
 
-  // 投稿といいねデータ取得
   const fetchWorkAndLikeData = useCallback(async () => {
     if (!workId) return;
     setLoading(true);
     try {
       const { data: workData, error: workError } = await supabase
         .from("works")
-        .select(`*, work_genres ( genres ( genre_id, genre_name ) )`)
+        .select("*")
         .eq("work_id", Number(workId))
         .single();
       if (workError) throw workError;
@@ -83,12 +74,8 @@ function DetailScreen() {
       }
 
       setWork({ ...workData, liked: isLiked });
-      setEditedTitle(workData.title);
-      setSelectedGenres(
-        (workData.work_genres || []).map((wg) => wg.genres.genre_id)
-      );
     } catch (error) {
-      console.error("投稿データ取得エラー:", error);
+      console.error(error);
       setWork(null);
     } finally {
       setLoading(false);
@@ -97,282 +84,91 @@ function DetailScreen() {
 
   useEffect(() => {
     fetchWorkAndLikeData();
-
-    const fetchAllGenres = async () => {
-      const { data } = await supabase.from("genres").select("*");
-      setAllGenres(data || []);
-    };
-    fetchAllGenres();
   }, [fetchWorkAndLikeData]);
 
-  // アニメーション取得
   useEffect(() => {
     const fetchAnimations = async () => {
       if (!workId) return;
-      try {
-        const { data, error } = await supabase
-          .from("animations")
-          .select("animation_data, created_at, id")
-          .eq("work_id", Number(workId))
-          .order("created_at", { ascending: false });
-
-        if (error) {
-          console.error("アニメーション取得エラー:", error);
-          return;
-        }
-        if (Array.isArray(data)) setAnimations(data);
-      } catch (e) {
-        console.error("アニメーション取得例外:", e);
-      }
+      const { data, error } = await supabase
+        .from("animations")
+        .select("animation_data")
+        .eq("work_id", Number(workId))
+        .order("created_at", { ascending: false });
+      if (!error && data) setAnimations(data);
     };
     fetchAnimations();
   }, [workId]);
 
-  // いいね
   const handleLike = async () => {
-    if (!currentUser || !work) {
-      alert("ログインが必要です。");
-      return;
-    }
-    const currentLikedStatus = work.liked;
-    setWork((prevWork) => ({ ...prevWork, liked: !currentLikedStatus }));
-
-    if (currentLikedStatus) {
-      const { error } = await supabase
-        .from("likes")
-        .delete()
-        .match({ user_id: currentUser.id, work_id: Number(workId) });
-      if (error) setWork((prev) => ({ ...prev, liked: currentLikedStatus }));
+    if (!currentUser || !work) return;
+    const currentLiked = work.liked;
+    setWork((prev) => ({ ...prev, liked: !currentLiked }));
+    if (currentLiked) {
+      await supabase.from("likes").delete().match({ user_id: currentUser.id, work_id: Number(workId) });
     } else {
-      const { error } = await supabase
-        .from("likes")
-        .insert([{ user_id: currentUser.id, work_id: Number(workId) }]);
-      if (error) setWork((prev) => ({ ...prev, liked: currentLikedStatus }));
+      await supabase.from("likes").insert([{ user_id: currentUser.id, work_id: Number(workId) }]);
     }
   };
 
-  // 共有
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setSnackbarOpen(true);
     } catch {
-      alert("URLのコピーに失敗しました。");
+      alert("コピー失敗");
     }
   };
 
-  const handleSnackbarClose = (event, reason) => {
-    if (reason === "clickaway") return;
-    setSnackbarOpen(false);
-  };
+  const handleSnackbarClose = () => setSnackbarOpen(false);
 
-  const handleStartEditing = () => {
-    setIsEditing(true);
-    setShowEditOptions(false);
-  };
+  if (loading) return <div className="detail-container">読み込み中...</div>;
+  if (!work) return <div className="detail-container">投稿が見つかりません</div>;
 
-  const handleGenreChange = (genreId) => {
-    setSelectedGenres((prev) =>
-      prev.includes(genreId)
-        ? prev.filter((id) => id !== genreId)
-        : [...prev, genreId]
-    );
-  };
+  const animationData =
+    animations.length === 0
+      ? null
+      : (() => {
+          const frames = animations.map((a) => ({
+            shapes: a.animation_data?.frames ? a.animation_data.frames[0] || [] : [],
+            stamps: a.animation_data?.stamps || [],
+          }));
+          
+          const first = animations[0].animation_data;
+          
+          // 🌟 修正: frames が配列であることを確認し、そうでない場合は空配列 [] を使用 🌟
+          const reversedFrames = Array.isArray(frames) ? frames.reverse() : [];
 
-  const handleSaveChanges = async () => {
-    setIsSaving(true);
-    try {
-      const { error: updateError } = await supabase
-        .from("works")
-        .update({ title: editedTitle })
-        .eq("work_id", Number(workId));
-      if (updateError) throw updateError;
-
-      const { error: deleteError } = await supabase
-        .from("work_genres")
-        .delete()
-        .eq("work_id", Number(workId));
-      if (deleteError) throw deleteError;
-
-      if (selectedGenres.length > 0) {
-        const newWorkGenres = selectedGenres.map((genreId) => ({
-          work_id: Number(workId),
-          genre_id: genreId,
-        }));
-        const { error: insertError } = await supabase
-          .from("work_genres")
-          .insert(newWorkGenres);
-        if (insertError) throw insertError;
-      }
-
-      alert("更新が完了しました。");
-      setIsEditing(false);
-
-      const updatedGenresForState = allGenres
-        .filter((genre) => selectedGenres.includes(genre.genre_id))
-        .map((genre) => ({
-          genres: {
-            genre_id: genre.genre_id,
-            genre_name: genre.genre_name,
-          },
-        }));
-
-      setWork((prevWork) => ({
-        ...prevWork,
-        title: editedTitle,
-        work_genres: updatedGenresForState,
-      }));
-    } catch (error) {
-      console.error("更新エラー:", error);
-      alert("更新に失敗しました。");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  if (loading)
-    return (
-      <div className="detail-container">
-        <p>読み込み中...</p>
-      </div>
-    );
-  if (!work)
-    return (
-      <div className="detail-container">
-        <p>投稿が見つかりません。</p>
-      </div>
-    );
-
-  const isOwner = currentUser && currentUser.id === work.user_id;
-
-  // animationData の構築
-  let animationData = null;
-  if (animations.length > 0) {
-    const firstAnimation = animations[0].animation_data;
-    const frames = [];
-    let stamps = [];
-    let selectedImage = null;
-    let savedWidth = 600;
-    let savedHeight = 400;
-
-    animations.forEach((a) => {
-      if (!a.animation_data) return;
-      let shapes = [];
-      if (typeof a.animation_data === "object") shapes = a.animation_data.shapes || [];
-      else if (typeof a.animation_data === "string") {
-        try {
-          shapes = JSON.parse(a.animation_data).shapes || [];
-        } catch {}
-      }
-      frames.push(...shapes);
-    });
-
-    if (typeof firstAnimation === "object") {
-      stamps = firstAnimation.stamps || [];
-      selectedImage = firstAnimation.selectedImage || null;
-      savedWidth = firstAnimation.savedWidth || 600;
-      savedHeight = firstAnimation.savedHeight || 400;
-    }
-
-    animationData = { frames, stamps, selectedImage, savedWidth, savedHeight };
-  }
-
+          return {
+            frames: reversedFrames, // 安全な変数を使用
+            selectedImage: first?.selectedImage || null,
+            // 昔の作品の再現に必要なデフォルト値
+            savedWidth: first?.savedWidth || 800, // 正しいデフォルト値に置き換えてください
+            savedHeight: first?.savedHeight || 600, // 正しいデフォルト値に置き換えてください
+            frameInterval: 250, 
+          };
+        })();
+        
   return (
     <div className="detail-container">
-      <button
-        onClick={() => (isEditing ? setIsEditing(false) : navigate(-1))}
-        className="back-button"
-      >
-        {isEditing ? "キャンセル" : "← 戻る"}
+      <button onClick={() => navigate(-1)} className="back-button">
+        ← 戻る
       </button>
 
       <div className="detail-card">
         {animationData ? (
-          <AnimationViewer
-            animationData={animationData}
-            width={600}
-            height={400}
-          />
+          <AnimationViewer animationData={animationData} width={600} height={400} />
         ) : (
           <div>アニメーションがありません</div>
         )}
 
-        {isEditing ? (
-          <div className="edit-form-container">
-            <input
-              type="text"
-              value={editedTitle}
-              onChange={(e) => setEditedTitle(e.target.value)}
-              className="title-input"
-            />
-            <div className="genres-container-edit">
-              {allGenres.map((genre) => (
-                <label key={genre.genre_id}>
-                  <input
-                    type="checkbox"
-                    value={genre.genre_id}
-                    checked={selectedGenres.includes(genre.genre_id)}
-                    onChange={() => handleGenreChange(genre.genre_id)}
-                  />
-                  {genre.genre_name}
-                </label>
-              ))}
-            </div>
-            <button
-              onClick={handleSaveChanges}
-              disabled={isSaving}
-              className="save-button"
-            >
-              {isSaving ? "保存中..." : "保存"}
-            </button>
-          </div>
-        ) : (
-          <>
-            {work.work_genres && work.work_genres.length > 0 && (
-              <div className="genres-container">
-                {work.work_genres.map(({ genres }) => (
-                  <span key={genres.genre_id} className="genre-tag">
-                    #{genres.genre_name}
-                  </span>
-                ))}
-              </div>
-            )}
-            <div className="detail-actions">
-              <p className="detail-title">{work.title}</p>
-              <div className="detail-buttons">
-                <ShareIcon onClick={handleShare} />
-                <HeartIcon liked={work.liked} onClick={handleLike} />
-                {isOwner && (
-                  <button
-                    onClick={() => setShowEditOptions(true)}
-                    className="edit-button"
-                  >
-                    編集
-                  </button>
-                )}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
-      {showEditOptions && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>編集メニュー</h3>
-            <button onClick={handleStartEditing}>
-              タイトル・タグを編集する
-            </button>
-            <button disabled>アニメーションを編集する</button>
-            <button
-              onClick={() => setShowEditOptions(false)}
-              className="modal-close-button"
-            >
-              閉じる
-            </button>
+        <div className="detail-actions">
+          <p className="detail-title">{work.title}</p>
+          <div className="detail-buttons">
+            <ShareIcon onClick={handleShare} />
+            <HeartIcon liked={work.liked} onClick={handleLike} />
           </div>
         </div>
-      )}
+      </div>
 
       <Snackbar
         open={snackbarOpen}
@@ -380,12 +176,8 @@ function DetailScreen() {
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity="success"
-          sx={{ width: "100%" }}
-        >
-          URLをクリップボードにコピーしました！
+        <Alert onClose={handleSnackbarClose} severity="success" sx={{ width: "100%" }}>
+          URLをコピーしました！
         </Alert>
       </Snackbar>
     </div>

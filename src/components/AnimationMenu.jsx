@@ -1,18 +1,26 @@
+// src/components/AnimationMenu.jsx
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useContext } from "react";
+// 🌟 修正済み: すべてのMUIアイコンをインポート 🌟
 import HomeIcon from "@mui/icons-material/Brush";
 import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
 import CropSquareIcon from "@mui/icons-material/CropSquare";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import PhotoFrameIcon from "@mui/icons-material/Photo";
+// ----------------------------------------
 import { AnimationContext } from "../context/AnimationContext";
 import { useAuth } from "../context/AuthContext";
+import { useStageSize } from "./useStageSize"; // 🌟 追加: useStageSizeをインポート (パスは環境に合わせてください)
 
 function AnimationMenu() {
   const location = useLocation();
-  const navigate = useNavigate(); // 追加
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { saveAnimation, resetAnimation } = useContext(AnimationContext); // resetAnimation 追加
+  const { saveAnimation, resetAnimation } = useContext(AnimationContext);
+  
+  // 🌟 追加: ステージサイズを取得
+  const stageSize = useStageSize(); 
 
   const menuItems = [
     { path: "sketch", label: "落書き", icon: <HomeIcon /> },
@@ -21,6 +29,12 @@ function AnimationMenu() {
     { path: "effect", label: "エフェクト", icon: <AutoAwesomeIcon /> },
     { path: "frame", label: "フレーム", icon: <PhotoFrameIcon /> },
   ];
+  
+  // 🌟 修正: saveAnimation 呼び出し時にサイズを渡す 🌟
+  const handleSave = () => {
+    // saveAnimation(stageWidth, stageHeight) の形式で呼び出し
+    saveAnimation(stageSize.width, stageSize.height); 
+  };
 
   const handleGoHome = () => {
     resetAnimation(); // 履歴・画像・workIdをリセット
@@ -45,7 +59,7 @@ function AnimationMenu() {
         ))}
       </div>
       <div style={styles.saveContainer}>
-        <button style={styles.saveButton} onClick={() => saveAnimation()}>
+        <button style={styles.saveButton} onClick={handleSave}> 
           💾 保存
         </button>
         <button style={styles.homeButton} onClick={handleGoHome}>
